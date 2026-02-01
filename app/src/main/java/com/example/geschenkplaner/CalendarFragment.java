@@ -1,64 +1,125 @@
 package com.example.geschenkplaner;
 
 import android.os.Bundle;
-
-import androidx.fragment.app.Fragment;
-
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.CalendarView;
+import android.widget.EditText;
+import android.widget.TextView;
+import android.widget.Toast;
 
-/**
- * A simple {@link Fragment} subclass.
- * Use the {@link CalendarFragment#newInstance} factory method to
- * create an instance of this fragment.
- */
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
+import com.google.firebase.Timestamp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.firestore.FirebaseFirestore;
+
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 public class CalendarFragment extends Fragment {
 
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+    private CalendarView calendarView;
+    private TextView tvDate, tvList;
+    private EditText etEvent;
+    private Button btnSave;
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private FirebaseFirestore db;
+    private String uid;
+    private String dateKey;
 
-    public CalendarFragment() {
-        // Required empty public constructor
-    }
+    private final SimpleDateFormat sdf =
+            new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
 
-    /**
-     * Use this factory method to create a new instance of
-     * this fragment using the provided parameters.
-     *
-     * @param param1 Parameter 1.
-     * @param param2 Parameter 2.
-     * @return A new instance of fragment CalendarFragment.
-     */
-    // TODO: Rename and change types and number of parameters
-    public static CalendarFragment newInstance(String param1, String param2) {
-        CalendarFragment fragment = new CalendarFragment();
-        Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
-        fragment.setArguments(args);
-        return fragment;
-    }
-
+    @Nullable
     @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+    public View onCreateView(
+            @NonNull LayoutInflater inflater,
+            @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState
+    ) {
+        View v = inflater.inflate(R.layout.fragment_calendar, container, false);
+
+        calendarView = v.findViewById(R.id.calendarView);
+        tvDate = v.findViewById(R.id.tvDate);
+        etEvent = v.findViewById(R.id.etEvent);
+        btnSave = v.findViewById(R.id.btnSave);
+        tvList = v.findViewById(R.id.tvList);
+
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Toast.makeText(getContext(), "Bitte einloggen", Toast.LENGTH_SHORT).show();
+            return v;
         }
+
+        uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+        db = FirebaseFirestore.getInstance();
+
+        // Startdatum = heute
+        dateKey = sdf.format(Calendar.getInstance().getTime());
+        tvDate.setText("Datum: " + dateKey);
+        loadEvents();
+
+        calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
+            Calendar c = Calendar.getInstance();
+            c.set(year, month, dayOfMonth);
+            dateKey = sdf.format(c.getTime());
+            tvDate.setText("Datum: " + dateKey);
+            loadEvents();
+        });
+
+        btnSave.setOnClickListener(v1 -> saveEvent());
+
+        return v;
     }
 
-    @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_calendar, container, false);
+    private void saveEvent() {
+        String text = etEvent.getText().toString().trim();
+        if (TextUtils.isEmpty(text)) {
+            Toast.makeText(getContext(), "Text eingeben", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("uid", uid);
+        data.put("dateKey", dateKey);
+        data.put("text", text);
+        data.put("createdAt", Timestamp.now());
+
+        db.collection("events")
+                .add(data)
+                .addOnSuccessListener(r -> {
+                    etEvent.setText("");
+                    loadEvents();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(getContext(), "Fehler: " + e.getMessage(),
+                                Toast.LENGTH_SHORT).show()
+                );
+    }
+
+    private void loadEvents() {
+        db.collection("events")
+                .whereEqualTo("uid", uid)
+                .whereEqualTo("dateKey", dateKey)
+                .get()
+                .addOnSuccessListener(qs -> {
+                    if (qs.isEmpty()) {
+                        tvList.setText("Keine Einträge");
+                        return;
+                    }
+                    StringBuilder sb = new StringBuilder();
+                    for (var doc : qs.getDocuments()) {
+                        sb.append("• ").append(doc.getString("text")).append("\n");
+                    }
+                    tvList.setText(sb.toString());
+                });
     }
 }
