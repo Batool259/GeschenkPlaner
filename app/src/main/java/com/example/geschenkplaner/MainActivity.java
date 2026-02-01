@@ -7,6 +7,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -16,8 +17,12 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        if (!AuthManager.isLoggedIn(this)) {
-            startActivity(new Intent(this, LoginActivity.class));
+        // Login-Check
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            Intent i = new Intent(this, LoginActivity.class);
+            // optional aber sauber: verhindert "Zurück" in MainActivity
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(i);
             finish();
             return;
         }
@@ -26,12 +31,10 @@ public class MainActivity extends AppCompatActivity {
 
         BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
 
-        // Beim ersten Start Default-Fragment setzen
         if (savedInstanceState == null) {
             replaceFragment(new HomeFragment());
         }
 
-        // Fragment wechseln (Navigation bleibt immer)
         bottomNav.setOnItemSelectedListener(item -> {
             int id = item.getItemId();
 
@@ -44,7 +47,7 @@ public class MainActivity extends AppCompatActivity {
             } else if (id == R.id.nav_settings) {
                 replaceFragment(new SettingsFragment());
                 return true;
-            } else if (id == R.id.nav_gifts) { // falls du diesen Tab so nutzt
+            } else if (id == R.id.nav_gifts) {
                 replaceFragment(new PersonListFragment());
                 return true;
             }
@@ -52,7 +55,6 @@ public class MainActivity extends AppCompatActivity {
             return false;
         });
 
-        // Optional: Auswahl nach Rotation behalten
         if (savedInstanceState != null) {
             int selected = savedInstanceState.getInt(KEY_SELECTED_ITEM, R.id.nav_home);
             bottomNav.setSelectedItemId(selected);
