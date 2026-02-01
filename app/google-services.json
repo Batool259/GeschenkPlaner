@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "524290959143",
+    "project_id": "geschenkplaner-cc0f2",
+    "storage_bucket": "geschenkplaner-cc0f2.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:524290959143:android:329ae0cf55b692abf4eb02",
+        "android_client_info": {
+          "package_name": "com.example.geschenkplaner"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAmUBQxarJjitibqhwprxYQXheXsvBmZ6s"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
