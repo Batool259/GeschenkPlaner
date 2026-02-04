@@ -57,7 +57,7 @@ public class PersonDetailActivity extends AppCompatActivity {
 
         RecyclerView rv = findViewById(R.id.rvGifts);
         rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new GiftAdapter(this);
+        adapter = new GiftAdapter();
         rv.setAdapter(adapter);
 
         FloatingActionButton fab = findViewById(R.id.fabAddGift);
