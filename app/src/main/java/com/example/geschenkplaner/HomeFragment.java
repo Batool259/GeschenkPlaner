@@ -25,29 +25,28 @@ public class HomeFragment extends Fragment {
     private TextView tvNextEventDate;
 
     private Button btnOpenPersons;
-    private Button btnAddPerson;
 
     public HomeFragment() {
         // required empty constructor
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container,
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             ViewGroup container,
                              Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         // Views verbinden
         tvGreeting = view.findViewById(R.id.tvGreeting);
         tvNextEventTitle = view.findViewById(R.id.tvNextEventTitle);
         tvNextEventDate = view.findViewById(R.id.tvNextEventDate);
-
         btnOpenPersons = view.findViewById(R.id.btnOpenPersons);
-
 
         // Firebase
         auth = FirebaseAuth.getInstance();
@@ -60,7 +59,6 @@ public class HomeFragment extends Fragment {
 
         // Navigation
         btnOpenPersons.setOnClickListener(v -> openPersons());
-
     }
 
     private void setGreeting() {
@@ -71,10 +69,13 @@ public class HomeFragment extends Fragment {
             return;
         }
 
-        if (user.getDisplayName() != null && !user.getDisplayName().trim().isEmpty()) {
-            tvGreeting.setText("Hallo, " + user.getDisplayName() + " 👋");
-        } else if (user.getEmail() != null) {
-            tvGreeting.setText("Hallo, " + user.getEmail() + " 👋");
+        String displayName = user.getDisplayName();
+        String email = user.getEmail();
+
+        if (displayName != null && !displayName.trim().isEmpty()) {
+            tvGreeting.setText("Hallo, " + displayName + " 👋");
+        } else if (email != null && !email.trim().isEmpty()) {
+            tvGreeting.setText("Hallo, " + email + " 👋");
         } else {
             tvGreeting.setText("Hallo 👋");
         }
@@ -102,7 +103,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void addPerson() {
-        // AddPerson ist bei dir eine Activity
         startActivity(new Intent(requireContext(), AddPersonActivity.class));
     }
 }
