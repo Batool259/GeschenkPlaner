@@ -5,15 +5,16 @@
         android:title="Home"
         android:icon="@android:drawable/ic_menu_view"/>
     <item
-        android:id="@+id/nav_gifts"
-        android:title="Gifts"
-        android:icon="@android:drawable/ic_menu_share"/>
+        android:id="@+id/nav_persons"
+        android:title="Personen"
+        android:icon="@drawable/baseline_account_box_24" />
+
     <item
         android:id="@+id/nav_calendar"
-        android:title="Calendar"
+        android:title="Kalendar"
         android:icon="@android:drawable/ic_menu_my_calendar"/>
     <item
         android:id="@+id/nav_settings"
-        android:title="Settings"
+        android:title="Einstellungen"
         android:icon="@android:drawable/ic_menu_manage"/>
 </menu>
