@@ -23,14 +23,6 @@
         android:layout_gravity="bottom"
         app:menu="@menu/bottom_nav_menu"/>
 
-    <!-- Floating Action Button (+) über der BottomNav -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabAdd"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:contentDescription="Add"
-        app:srcCompat="@android:drawable/ic_input_add"
-        app:layout_anchor="@id/bottomNav"
-        app:layout_anchorGravity="top|center"/>
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

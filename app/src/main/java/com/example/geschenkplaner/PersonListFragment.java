@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -14,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -28,7 +28,7 @@ public class PersonListFragment extends Fragment {
 
     private RecyclerView rvPersons;
     private TextView tvEmpty;
-    private ImageButton btnAddPerson;
+    private FloatingActionButton fabAddPerson;
 
     private FirebaseAuth auth;
     private FirebaseFirestore db;
@@ -56,7 +56,7 @@ public class PersonListFragment extends Fragment {
 
         rvPersons = view.findViewById(R.id.rvPersons);
         tvEmpty = view.findViewById(R.id.tvEmpty);
-        btnAddPerson = view.findViewById(R.id.btnAddPerson);
+        fabAddPerson = view.findViewById(R.id.fabAddPerson);
 
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
@@ -65,9 +65,10 @@ public class PersonListFragment extends Fragment {
         rvPersons.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvPersons.setAdapter(adapter);
 
-        btnAddPerson.setOnClickListener(v -> {
-            startActivity(new Intent(requireContext(), AddPersonActivity.class));
-        });
+        // FAB: Person hinzufügen
+        fabAddPerson.setOnClickListener(v ->
+                startActivity(new Intent(requireContext(), AddPersonActivity.class))
+        );
 
         updateEmptyState();
     }
@@ -98,7 +99,7 @@ public class PersonListFragment extends Fragment {
 
         String uid = user.getUid();
 
-        // Realtime-Listener auf Collection (Firestore Listen) :contentReference[oaicite:4]{index=4}
+        // Realtime-Listener auf Collection
         personsListener = db.collection("users")
                 .document(uid)
                 .collection("persons")
