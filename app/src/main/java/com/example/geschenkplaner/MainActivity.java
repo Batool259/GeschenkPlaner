@@ -9,6 +9,11 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
+import Fragments.CalendarFragment;
+import Fragments.HomeFragment;
+import Fragments.PersonListFragment;
+import Fragments.SettingsFragment;
+
 public class MainActivity extends AppCompatActivity {
 
     private static final String KEY_SELECTED_ITEM = "selected_bottom_item";
