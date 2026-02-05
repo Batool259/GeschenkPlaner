@@ -22,7 +22,7 @@
         android:id="@+id/tvSubtitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Deine Übersicht"
+        android:text="Personliste"
         android:textSize="14sp"
         android:alpha="0.75"
         app:layout_constraintTop_toBottomOf="@id/tvGreeting"
@@ -30,61 +30,9 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginTop="6dp" />
 
-    <!-- Kachel: Nächster Termin -->
-    <androidx.cardview.widget.CardView
-        android:id="@+id/cardNextEvent"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardCornerRadius="14dp"
-        app:cardElevation="2dp"
-        app:layout_constraintTop_toBottomOf="@id/tvSubtitle"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="14dp">
 
-            <TextView
-                android:id="@+id/tvNextEventLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Nächster Termin"
-                android:textStyle="bold"
-                android:textSize="16sp" />
-
-            <TextView
-                android:id="@+id/tvNextEventTitle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Noch keine Termine/Geburtstage"
-                android:layout_marginTop="8dp"
-                android:textSize="15sp" />
-
-            <TextView
-                android:id="@+id/tvNextEventDate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Füge einen Termin im Kalender hinzu."
-                android:layout_marginTop="4dp"
-                android:alpha="0.75"
-                android:textSize="13sp" />
-
-        </LinearLayout>
-    </androidx.cardview.widget.CardView>
-
-    <!-- Buttons -->
-    <Button
-        android:id="@+id/btnOpenPersons"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:text="Personen ansehen"
-        android:layout_marginTop="18dp"
-        app:layout_constraintTop_toBottomOf="@id/cardNextEvent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
+
+

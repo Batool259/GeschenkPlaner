@@ -21,10 +21,7 @@ public class HomeFragment extends Fragment {
 
     // UI
     private TextView tvGreeting;
-    private TextView tvNextEventTitle;
-    private TextView tvNextEventDate;
 
-    private Button btnOpenPersons;
 
     public HomeFragment() {
         // required empty constructor
@@ -44,9 +41,7 @@ public class HomeFragment extends Fragment {
 
         // Views verbinden
         tvGreeting = view.findViewById(R.id.tvGreeting);
-        tvNextEventTitle = view.findViewById(R.id.tvNextEventTitle);
-        tvNextEventDate = view.findViewById(R.id.tvNextEventDate);
-        btnOpenPersons = view.findViewById(R.id.btnOpenPersons);
+
 
         // Firebase
         auth = FirebaseAuth.getInstance();
@@ -54,11 +49,6 @@ public class HomeFragment extends Fragment {
         // Begrüßung setzen
         setGreeting();
 
-        // Platzhalter für nächsten Termin
-        setNextEventPlaceholder();
-
-        // Navigation
-        btnOpenPersons.setOnClickListener(v -> openPersons());
     }
 
     private void setGreeting() {
@@ -81,26 +71,6 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private void setNextEventPlaceholder() {
-        tvNextEventTitle.setText("Noch keine Termine/Geburtstage");
-        tvNextEventDate.setText("Füge einen Termin im Kalender hinzu.");
-    }
-
-    private void openPersons() {
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, new PersonListFragment())
-                .addToBackStack(null)
-                .commit();
-    }
-
-    private void openCalendar() {
-        requireActivity().getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, new CalendarFragment())
-                .addToBackStack(null)
-                .commit();
-    }
 
     private void addPerson() {
         startActivity(new Intent(requireContext(), AddPersonActivity.class));
