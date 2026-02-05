@@ -17,6 +17,9 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
 
+import Adapter.GiftAdapter;
+import model.GiftItem;
+
 public class PersonDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_PERSON_ID = "personId";
