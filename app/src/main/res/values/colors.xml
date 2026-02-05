@@ -2,4 +2,6 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="planned_yellow">#F4B400</color>
+    <color name="bought_green">#34A853</color>
 </resources>

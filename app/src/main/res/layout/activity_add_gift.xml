@@ -1,58 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="16dp"
-    android:orientation="vertical">
-
-    <TextView
-        android:text="Add Gift"
-        android:textStyle="bold"
-        android:textSize="20sp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-    <EditText
-        android:id="@+id/etTitle"
-        android:hint="Gift Name"
-        android:layout_marginTop="12dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <EditText
-        android:id="@+id/etPrice"
-        android:hint="Price"
-        android:inputType="numberDecimal"
-        android:layout_marginTop="10dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+    android:padding="16dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginTop="12dp">
+        android:orientation="vertical">
 
-        <Button
-            android:id="@+id/btnPlanned"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Geplant"/>
+        <!-- Bild-Upload Fläche -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/cardImage"
+            android:layout_width="match_parent"
+            android:layout_height="160dp"
+            app:cardCornerRadius="16dp"
+            app:cardUseCompatPadding="true">
 
-        <Button
-            android:id="@+id/btnBought"
-            android:layout_width="0dp"
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/imgGift"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:scaleType="centerCrop"
+                    android:contentDescription="Gift image"
+                    android:visibility="gone" />
+
+                <LinearLayout
+                    android:id="@+id/placeholderImage"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="48dp"
+                        android:layout_height="48dp"
+                        app:srcCompat="@android:drawable/ic_menu_camera"
+                        android:contentDescription="Upload" />
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bild hinzufügen"
+                        android:layout_marginTop="8dp"/>
+                </LinearLayout>
+
+            </FrameLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <!-- Gift Name -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Gekauft"
-            android:layout_marginStart="10dp"/>
+            android:layout_marginTop="16dp"
+            android:hint="Gift Name">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etGiftName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Price -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Price"
+            android:layout_marginTop="12dp"
+            app:suffixText="€">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etPrice"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="numberDecimal"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Link -->
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Link (optional)"
+            android:layout_marginTop="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/etLink"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textUri"/>
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Geplant / Gekauft -->
+        <com.google.android.material.button.MaterialButtonToggleGroup
+            android:id="@+id/toggleStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:singleSelection="true"
+            app:selectionRequired="true"
+            app:checkedButton="@id/btnPlanned">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnPlanned"
+                android:layout_width="16dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:layout_weight="1"
+                android:backgroundTint="@color/planned_yellow"
+                android:text="Geplant"
+                android:textColor="@color/white" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnBought"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Gekauft"
+                android:textColor="@color/white"
+                android:backgroundTint="@color/bought_green"
+                android:layout_marginStart="8dp"/>
+
+        </com.google.android.material.button.MaterialButtonToggleGroup>
+        <!-- Save Button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSaveGift"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="Save Gift"
+            app:cornerRadius="20dp"/>
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/btnAddGift"
-        android:text="+ Geschenk"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"/>
-
-</LinearLayout>
+</androidx.core.widget.NestedScrollView>
