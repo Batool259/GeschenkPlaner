@@ -46,7 +46,6 @@ public class HomeFragment extends Fragment {
     private EditText etSearch;
     private RecyclerView rvPersons;
     private TextView tvEmpty;
-    private FloatingActionButton fabAddPerson;
 
     private final List<PersonRow> allItems = new ArrayList<>();
     private final List<PersonRow> filteredItems = new ArrayList<>();
@@ -73,7 +72,6 @@ public class HomeFragment extends Fragment {
         etSearch = view.findViewById(R.id.etSearch);
         rvPersons = view.findViewById(R.id.rvPersons);
         tvEmpty = view.findViewById(R.id.tvEmpty);
-        fabAddPerson = view.findViewById(R.id.fabAddPerson);
 
         auth = FirebaseAuth.getInstance();
 
@@ -91,11 +89,6 @@ public class HomeFragment extends Fragment {
         rvPersons.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvPersons.setAdapter(adapter);
 
-        fabAddPerson.setOnClickListener(v -> {
-            if (requireActivity() instanceof MainActivity) {
-                ((MainActivity) requireActivity()).navigateToAddPerson();
-            }
-        });
 
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
