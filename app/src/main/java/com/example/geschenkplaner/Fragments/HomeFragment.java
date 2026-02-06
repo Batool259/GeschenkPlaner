@@ -1,5 +1,6 @@
 package com.example.geschenkplaner.Fragments;
 
+import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
@@ -8,10 +9,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.AppCompatTextView;
+import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -25,7 +29,6 @@ import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.Query;
 
@@ -34,12 +37,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import androidx.appcompat.widget.AppCompatTextView;
-
 public class HomeFragment extends Fragment {
 
     private FirebaseAuth auth;
-    private FirebaseFirestore db;
     private ListenerRegistration personsListener;
 
     private TextView tvGreeting;
@@ -52,9 +52,10 @@ public class HomeFragment extends Fragment {
     private final List<PersonRow> filteredItems = new ArrayList<>();
     private PersonAdapter adapter;
 
+    // Wenn du Demo nicht mehr willst: auf false lassen und seedDemo-Block unten entfernen
     private boolean demoSeededThisSession = false;
 
-    public HomeFragment() { }
+    public HomeFragment() {}
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
@@ -75,15 +76,17 @@ public class HomeFragment extends Fragment {
         fabAddPerson = view.findViewById(R.id.fabAddPerson);
 
         auth = FirebaseAuth.getInstance();
-        db = FirebaseFirestore.getInstance();
 
         setGreeting();
 
-        adapter = new PersonAdapter(filteredItems, row -> {
-            Intent i = new Intent(requireContext(), PersonDetailActivity.class);
-            i.putExtra(PersonDetailActivity.EXTRA_PERSON_ID, row.id);
-            startActivity(i);
-        });
+        adapter = new PersonAdapter(filteredItems,
+                row -> {
+                    Intent i = new Intent(requireContext(), PersonDetailActivity.class);
+                    i.putExtra(PersonDetailActivity.EXTRA_PERSON_ID, row.id);
+                    startActivity(i);
+                },
+                (anchorView, row) -> showRowMenu(anchorView, row)
+        );
 
         rvPersons.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvPersons.setAdapter(adapter);
@@ -160,8 +163,15 @@ public class HomeFragment extends Fragment {
                     for (DocumentSnapshot doc : snap.getDocuments()) {
                         String name = doc.getString("name");
                         String birthday = doc.getString("birthday");
+                        String note = doc.getString("note");
+
                         if (name == null || name.trim().isEmpty()) name = "(Ohne Name)";
-                        allItems.add(new PersonRow(doc.getId(), name, birthday != null ? birthday : ""));
+                        allItems.add(new PersonRow(
+                                doc.getId(),
+                                name,
+                                birthday != null ? birthday : "",
+                                note != null ? note : ""
+                        ));
                     }
 
                     // Demo seed: nur wenn wirklich leer
@@ -173,39 +183,6 @@ public class HomeFragment extends Fragment {
                     applyFiltered(etSearch.getText() != null ? etSearch.getText().toString() : "");
                     updateEmptyState();
                 });
-    }
-
-    private void seedDemo(String uid) {
-        String[] demoNames = {"Patrick Schmidt", "Lena Müller", "Tom Braun"};
-        String[] demoBirth = {"12.03.2003", "01.11.2002", "26.07.2003"};
-
-        for (int i = 0; i < demoNames.length; i++) {
-            Map<String, Object> p = new HashMap<>();
-            p.put("name", demoNames[i]);
-            p.put("birthday", demoBirth[i]);
-            p.put("note", "");
-            p.put("createdAt", Timestamp.now());
-
-            FirestorePaths.persons(uid)
-                    .add(p)
-                    .addOnSuccessListener(personRef -> {
-                        addDemoGift(uid, personRef.getId(), "Parfum", 39.99);
-                        addDemoGift(uid, personRef.getId(), "Buch", 14.99);
-                    });
-        }
-    }
-
-    private void addDemoGift(String uid, String personId, String title, double price) {
-        Map<String, Object> g = new HashMap<>();
-        g.put("uid", uid);
-        g.put("personId", personId);
-        g.put("title", title);
-        g.put("price", price);
-        g.put("link", "");
-        g.put("bought", false);
-        g.put("createdAt", Timestamp.now());
-
-        FirestorePaths.gifts(uid, personId).add(g);
     }
 
     private void stopPersonsListener() {
@@ -241,16 +218,109 @@ public class HomeFragment extends Fragment {
         tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
+    // --- 3-Punkte Menü ---
+    private void showRowMenu(View anchor, PersonRow row) {
+        PopupMenu menu = new PopupMenu(requireContext(), anchor);
+        menu.getMenuInflater().inflate(R.menu.person_row_menu, menu.getMenu());
+
+        menu.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+            if (id == R.id.action_edit) {
+                showEditDialog(row);
+                return true;
+            } else if (id == R.id.action_delete) {
+                showDeleteDialog(row);
+                return true;
+            }
+            return false;
+        });
+
+        menu.show();
+    }
+
+    private void showEditDialog(PersonRow row) {
+        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_person, null, false);
+
+        EditText etName = content.findViewById(R.id.etEditName);
+        EditText etBirthday = content.findViewById(R.id.etEditBirthday);
+        EditText etNote = content.findViewById(R.id.etEditNote);
+
+        etName.setText(row.name);
+        etBirthday.setText(row.birthday);
+        etNote.setText(row.note);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Person bearbeiten")
+                .setView(content)
+                .setPositiveButton("Speichern", (d, w) -> {
+                    FirebaseUser user = auth.getCurrentUser();
+                    if (user == null) return;
+
+                    String newName = etName.getText().toString().trim();
+                    String newBirthday = etBirthday.getText().toString().trim();
+                    String newNote = etNote.getText().toString().trim();
+
+                    if (newName.isEmpty()) newName = "(Ohne Name)";
+
+                    Map<String, Object> update = new HashMap<>();
+                    update.put("name", newName);
+                    update.put("birthday", newBirthday);
+                    update.put("note", newNote);
+                    update.put("updatedAt", Timestamp.now());
+
+                    FirestorePaths.person(user.getUid(), row.id).update(update);
+                })
+                .setNegativeButton("Abbrechen", null)
+                .show();
+    }
+
+    private void showDeleteDialog(PersonRow row) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Person löschen?")
+                .setMessage(row.name)
+                .setPositiveButton("Löschen", (d, w) -> {
+                    FirebaseUser user = auth.getCurrentUser();
+                    if (user == null) return;
+                    FirestorePaths.person(user.getUid(), row.id).delete();
+                })
+                .setNegativeButton("Abbrechen", null)
+                .show();
+    }
+
+    // --- Demo (optional) ---
+    private void seedDemo(String uid) {
+        String[] demoNames = {"Patrick Schmidt", "Lena Müller", "Tom Braun"};
+        String[] demoBirth = {"12.03.2003", "01.11.2002", "26.07.2003"};
+
+        for (int i = 0; i < demoNames.length; i++) {
+            Map<String, Object> p = new HashMap<>();
+            p.put("name", demoNames[i]);
+            p.put("birthday", demoBirth[i]);
+            p.put("note", "");
+            p.put("createdAt", Timestamp.now());
+
+            FirestorePaths.persons(uid).add(p);
+        }
+    }
+
     // ---- RecyclerView ----
     private static class PersonRow {
         final String id;
         final String name;
         final String birthday;
+        final String note;
 
-        PersonRow(String id, String name, String birthday) {
+        PersonRow(String id, String name, String birthday, String note) {
             this.id = id;
             this.name = name;
             this.birthday = birthday;
+            this.note = note;
+        }
+
+        String initial() {
+            String n = name != null ? name.trim() : "";
+            if (n.isEmpty()) return "?";
+            return ("" + Character.toUpperCase(n.charAt(0)));
         }
     }
 
@@ -258,13 +328,19 @@ public class HomeFragment extends Fragment {
         void onClick(PersonRow row);
     }
 
+    private interface OnMoreClick {
+        void onMoreClick(View anchorView, PersonRow row);
+    }
+
     private static class PersonAdapter extends RecyclerView.Adapter<PersonVH> {
         private final List<PersonRow> data;
         private final OnPersonClick onClick;
+        private final OnMoreClick onMoreClick;
 
-        PersonAdapter(List<PersonRow> data, OnPersonClick onClick) {
+        PersonAdapter(List<PersonRow> data, OnPersonClick onClick, OnMoreClick onMoreClick) {
             this.data = data;
             this.onClick = onClick;
+            this.onMoreClick = onMoreClick;
         }
 
         @NonNull
@@ -279,7 +355,9 @@ public class HomeFragment extends Fragment {
         public void onBindViewHolder(@NonNull PersonVH holder, int position) {
             PersonRow row = data.get(position);
             holder.bind(row);
+
             holder.itemView.setOnClickListener(v -> onClick.onClick(row));
+            holder.btnMore.setOnClickListener(v -> onMoreClick.onMoreClick(holder.btnMore, row));
         }
 
         @Override
@@ -291,20 +369,27 @@ public class HomeFragment extends Fragment {
     private static class PersonVH extends RecyclerView.ViewHolder {
         private final AppCompatTextView tvName;
         private final AppCompatTextView tvInfo;
+        private final TextView tvInitial;
+        private final ImageButton btnMore;
 
         PersonVH(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvInfo = itemView.findViewById(R.id.tvInfo);
+            tvInitial = itemView.findViewById(R.id.tvInitial);
+            btnMore = itemView.findViewById(R.id.btnMore);
         }
 
         void bind(PersonRow row) {
             tvName.setText(row.name);
+
             if (row.birthday == null || row.birthday.trim().isEmpty()) {
                 tvInfo.setText("Geburtstag: —");
             } else {
                 tvInfo.setText("Geburtstag: " + row.birthday);
             }
+
+            tvInitial.setText(row.initial());
         }
     }
 }
