@@ -9,10 +9,11 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
-import Fragments.CalendarFragment;
-import Fragments.HomeFragment;
-import Fragments.PersonListFragment;
-import Fragments.SettingsFragment;
+import com.example.geschenkplaner.Fragments.CalendarFragment;
+import com.example.geschenkplaner.Fragments.HomeFragment;
+import com.example.geschenkplaner.Fragments.SettingsFragment;
+import com.example.geschenkplaner.Fragments.AddPersonFragment;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,14 +47,14 @@ public class MainActivity extends AppCompatActivity {
             if (id == R.id.nav_home) {
                 replaceFragment(new HomeFragment());
                 return true;
+            } else if (id == R.id.nav_add_persons) {
+                replaceFragment(new AddPersonFragment());
+                return true;
             } else if (id == R.id.nav_calendar) {
                 replaceFragment(new CalendarFragment());
                 return true;
             } else if (id == R.id.nav_settings) {
                 replaceFragment(new SettingsFragment());
-                return true;
-            } else if (id == R.id.nav_persons) {
-                replaceFragment(new PersonListFragment());
                 return true;
             }
 

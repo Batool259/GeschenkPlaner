@@ -1,4 +1,4 @@
-package Fragments;
+package com.example.geschenkplaner.Fragments;
 
 import android.os.Bundle;
 import android.text.TextUtils;

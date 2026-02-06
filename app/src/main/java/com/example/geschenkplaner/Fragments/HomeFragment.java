@@ -1,4 +1,4 @@
-package Fragments;
+package com.example.geschenkplaner.Fragments;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -26,48 +26,67 @@ import com.google.firebase.firestore.Query;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PersonListFragment extends Fragment {
+/**
+ * Home = Personenliste + Begrüßung
+ *
+ * Hinweis: Dieses Fragment lädt fragment_home.xml und erwartet dort:
+ * tvGreeting, rvPersons, tvEmpty, fabAddPerson
+ */
+public class HomeFragment extends Fragment {
 
+    // Firebase
+    private FirebaseAuth auth;
+    private FirebaseFirestore db;
+
+    // Listener (muss in onStop() entfernt werden)
+    private ListenerRegistration personsListener;
+
+    // UI
+    private TextView tvGreeting;
     private RecyclerView rvPersons;
     private TextView tvEmpty;
     private FloatingActionButton fabAddPerson;
 
-    private FirebaseAuth auth;
-    private FirebaseFirestore db;
-
-    private ListenerRegistration personsListener;
-
+    // RecyclerView
     private final List<PersonRow> items = new ArrayList<>();
     private PersonAdapter adapter;
 
-    public PersonListFragment() {
-        // Leerer Konstruktor erforderlich
+    public HomeFragment() {
+        // required empty constructor
     }
 
-    @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.fragment_add_persons, container, false);
+        // Home-Screen Layout (muss Liste + Greeting enthalten)
+        return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
     @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+    public void onViewCreated(@NonNull View view,
+                              @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Views verbinden
+        tvGreeting = view.findViewById(R.id.tvGreeting);
         rvPersons = view.findViewById(R.id.rvPersons);
         tvEmpty = view.findViewById(R.id.tvEmpty);
         fabAddPerson = view.findViewById(R.id.fabAddPerson);
 
+        // Firebase
         auth = FirebaseAuth.getInstance();
         db = FirebaseFirestore.getInstance();
 
+        // Begrüßung setzen
+        setGreeting();
+
+        // RecyclerView Setup
         adapter = new PersonAdapter(items);
         rvPersons.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvPersons.setAdapter(adapter);
 
-        // FAB: Person hinzufügen
+        // FAB: Person hinzufügen (bei euch aktuell Activity)
         fabAddPerson.setOnClickListener(v ->
                 startActivity(new Intent(requireContext(), AddPersonActivity.class))
         );
@@ -78,6 +97,8 @@ public class PersonListFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
+        // Listener in onStart starten und in onStop entfernen ist ein übliches Lifecycle-Pattern
+        // (damit keine Listener im Hintergrund weiterlaufen).
         startPersonsListener();
     }
 
@@ -85,6 +106,26 @@ public class PersonListFragment extends Fragment {
     public void onStop() {
         super.onStop();
         stopPersonsListener();
+    }
+
+    private void setGreeting() {
+        FirebaseUser user = auth.getCurrentUser();
+
+        if (user == null) {
+            tvGreeting.setText("Hallo 👋");
+            return;
+        }
+
+        String displayName = user.getDisplayName();
+        String email = user.getEmail();
+
+        if (displayName != null && !displayName.trim().isEmpty()) {
+            tvGreeting.setText("Hallo, " + displayName + " 👋");
+        } else if (email != null && !email.trim().isEmpty()) {
+            tvGreeting.setText("Hallo, " + email + " 👋");
+        } else {
+            tvGreeting.setText("Hallo 👋");
+        }
     }
 
     private void startPersonsListener() {
@@ -101,7 +142,7 @@ public class PersonListFragment extends Fragment {
 
         String uid = user.getUid();
 
-        // Realtime-Listener auf Collection
+        // Realtime Listener auf persons Collection
         personsListener = db.collection("users")
                 .document(uid)
                 .collection("persons")
@@ -125,6 +166,9 @@ public class PersonListFragment extends Fragment {
                     adapter.notifyDataSetChanged();
                     updateEmptyState();
                 });
+
+        // Firestore Snapshot Listener sind „persistent“ und sollten wieder entfernt werden,
+        // z. B. über ListenerRegistration.remove(). :contentReference[oaicite:1]{index=1}
     }
 
     private void stopPersonsListener() {
@@ -132,6 +176,7 @@ public class PersonListFragment extends Fragment {
             personsListener.remove();
             personsListener = null;
         }
+        // remove() ist der offizielle Weg, einen Listener zu detachen. :contentReference[oaicite:2]{index=2}
     }
 
     private void updateEmptyState() {
@@ -140,6 +185,7 @@ public class PersonListFragment extends Fragment {
         tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
+    // ---- RecyclerView Hilfsklassen ----
     private static class PersonRow {
         final String id;
         final String name;
