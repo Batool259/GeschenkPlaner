@@ -8,16 +8,19 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
 
 public class GiftDetailActivity extends AppCompatActivity {
 
+    public static final String EXTRA_PERSON_ID = "personId";
     public static final String EXTRA_GIFT_ID = "giftId";
 
     private FirebaseFirestore db;
     private String uid;
+    private String personId;
     private String giftId;
 
     private TextView tvTitle, tvPrice, tvLink, tvStatus;
@@ -34,8 +37,9 @@ public class GiftDetailActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
         giftId = getIntent().getStringExtra(EXTRA_GIFT_ID);
-        if (giftId == null) { finish(); return; }
+        if (personId == null || giftId == null) { finish(); return; }
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
@@ -57,11 +61,10 @@ public class GiftDetailActivity extends AppCompatActivity {
     }
 
     private void loadGift() {
-        db.collection("gifts").document(giftId).get()
+        FirestorePaths.gift(uid, personId, giftId)
+                .get()
                 .addOnSuccessListener(doc -> {
                     if (!doc.exists()) { finish(); return; }
-                    String owner = doc.getString("uid");
-                    if (owner != null && !owner.equals(uid)) { finish(); return; }
 
                     String title = doc.getString("title");
                     Double price = doc.getDouble("price");
@@ -72,11 +75,13 @@ public class GiftDetailActivity extends AppCompatActivity {
                     tvPrice.setText("Preis: € " + (price != null ? price : "—"));
                     tvLink.setText("Link: " + (link != null && !link.trim().isEmpty() ? link : "—"));
                     tvStatus.setText("Status: " + ((bought != null && bought) ? "Gekauft ✅" : "Geplant"));
-                });
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
     private void markBought() {
-        db.collection("gifts").document(giftId)
+        FirestorePaths.gift(uid, personId, giftId)
                 .update("bought", true)
                 .addOnSuccessListener(v -> {
                     Toast.makeText(this, "Als gekauft gespeichert ✅", Toast.LENGTH_SHORT).show();
@@ -87,7 +92,7 @@ public class GiftDetailActivity extends AppCompatActivity {
     }
 
     private void deleteGift() {
-        db.collection("gifts").document(giftId)
+        FirestorePaths.gift(uid, personId, giftId)
                 .delete()
                 .addOnSuccessListener(v -> {
                     Toast.makeText(this, "Gelöscht ✅", Toast.LENGTH_SHORT).show();

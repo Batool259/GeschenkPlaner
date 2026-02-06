@@ -19,6 +19,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.geschenkplaner.MainActivity;
 import com.example.geschenkplaner.PersonDetailActivity;
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -144,9 +145,7 @@ public class HomeFragment extends Fragment {
 
         String uid = user.getUid();
 
-        personsListener = db.collection("users")
-                .document(uid)
-                .collection("persons")
+        personsListener = FirestorePaths.persons(uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING)
                 .addSnapshotListener((snap, err) -> {
                     allItems.clear();
@@ -165,7 +164,7 @@ public class HomeFragment extends Fragment {
                         allItems.add(new PersonRow(doc.getId(), name, birthday != null ? birthday : ""));
                     }
 
-                    // Demo seed: nur wenn wirklich leer (Uni-Projekt Demo)
+                    // Demo seed: nur wenn wirklich leer
                     if (!demoSeededThisSession && allItems.isEmpty()) {
                         demoSeededThisSession = true;
                         seedDemo(uid);
@@ -177,7 +176,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void seedDemo(String uid) {
-        // 3 Demo-Personen + je 2 Demo-Geschenke (minimal)
         String[] demoNames = {"Patrick Schmidt", "Lena Müller", "Tom Braun"};
         String[] demoBirth = {"12.03.2003", "01.11.2002", "26.07.2003"};
 
@@ -188,12 +186,9 @@ public class HomeFragment extends Fragment {
             p.put("note", "");
             p.put("createdAt", Timestamp.now());
 
-            db.collection("users")
-                    .document(uid)
-                    .collection("persons")
+            FirestorePaths.persons(uid)
                     .add(p)
                     .addOnSuccessListener(personRef -> {
-                        // Demo gifts
                         addDemoGift(uid, personRef.getId(), "Parfum", 39.99);
                         addDemoGift(uid, personRef.getId(), "Buch", 14.99);
                     });
@@ -210,7 +205,7 @@ public class HomeFragment extends Fragment {
         g.put("bought", false);
         g.put("createdAt", Timestamp.now());
 
-        db.collection("gifts").add(g);
+        FirestorePaths.gifts(uid, personId).add(g);
     }
 
     private void stopPersonsListener() {

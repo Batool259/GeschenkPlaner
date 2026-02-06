@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -109,13 +110,15 @@ public class CalendarFragment extends Fragment {
         }
 
         Map<String, Object> data = new HashMap<>();
+        // optional, aber praktisch
         data.put("uid", uid);
+
         data.put("dateKey", dateKey);
         data.put("text", text);
         data.put("createdAt", Timestamp.now());
         data.put("updatedAt", Timestamp.now());
 
-        db.collection("events")
+        FirestorePaths.events(uid)
                 .add(data)
                 .addOnSuccessListener(r -> {
                     etEvent.setText("");
@@ -128,8 +131,7 @@ public class CalendarFragment extends Fragment {
     }
 
     private void loadEventsForSelectedDate() {
-        db.collection("events")
-                .whereEqualTo("uid", uid)
+        FirestorePaths.events(uid)
                 .whereEqualTo("dateKey", dateKey)
                 .get()
                 .addOnSuccessListener(qs -> {
@@ -145,9 +147,7 @@ public class CalendarFragment extends Fragment {
     }
 
     private void loadMarkedDays() {
-        // simple: alle event-dateKeys sammeln und als Liste anzeigen
-        db.collection("events")
-                .whereEqualTo("uid", uid)
+        FirestorePaths.events(uid)
                 .get()
                 .addOnSuccessListener(qs -> {
                     ArrayList<String> days = new ArrayList<>();
@@ -243,7 +243,7 @@ public class CalendarFragment extends Fragment {
                     update.put("text", newText);
                     update.put("updatedAt", Timestamp.now());
 
-                    db.collection("events").document(row.id)
+                    FirestorePaths.event(uid, row.id)
                             .update(update)
                             .addOnSuccessListener(x -> {
                                 loadEventsForSelectedDate();
@@ -259,7 +259,7 @@ public class CalendarFragment extends Fragment {
                 .setTitle("Eintrag löschen?")
                 .setMessage(row.text)
                 .setPositiveButton("Löschen", (d, w) -> {
-                    db.collection("events").document(row.id)
+                    FirestorePaths.event(uid, row.id)
                             .delete()
                             .addOnSuccessListener(x -> {
                                 loadEventsForSelectedDate();

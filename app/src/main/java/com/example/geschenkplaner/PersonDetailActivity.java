@@ -7,11 +7,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.view.ViewGroup;
 
-
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -87,11 +87,7 @@ public class PersonDetailActivity extends AppCompatActivity {
     }
 
     private void loadPerson() {
-        // WICHTIG: passt zu HomeFragment: users/{uid}/persons/{personId}
-        db.collection("users")
-                .document(uid)
-                .collection("persons")
-                .document(personId)
+        FirestorePaths.person(uid, personId)
                 .get()
                 .addOnSuccessListener(doc -> {
                     if (!doc.exists()) {
@@ -117,9 +113,7 @@ public class PersonDetailActivity extends AppCompatActivity {
     }
 
     private void loadGifts() {
-        db.collection("gifts")
-                .whereEqualTo("uid", uid)
-                .whereEqualTo("personId", personId)
+        FirestorePaths.gifts(uid, personId)
                 .get()
                 .addOnSuccessListener(qs -> {
                     ArrayList<GiftRow> list = new ArrayList<>();
@@ -191,6 +185,7 @@ public class PersonDetailActivity extends AppCompatActivity {
             holder.bind(row);
             holder.itemView.setOnClickListener(v -> {
                 Intent i = new Intent(PersonDetailActivity.this, GiftDetailActivity.class);
+                i.putExtra(GiftDetailActivity.EXTRA_PERSON_ID, personId);
                 i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
                 startActivity(i);
             });

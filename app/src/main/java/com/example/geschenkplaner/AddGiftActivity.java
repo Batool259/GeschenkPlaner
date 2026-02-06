@@ -8,10 +8,10 @@ import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.data.FirestorePaths;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.button.MaterialButtonToggleGroup;
-import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -43,6 +43,7 @@ public class AddGiftActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         String uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        // db wird hier nicht zwingend gebraucht, aber wir lassen es drin falls du später noch mehr machst
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
         EditText etName = findViewById(R.id.etGiftName);
@@ -77,15 +78,18 @@ public class AddGiftActivity extends AppCompatActivity {
             String link = etLink.getText().toString().trim();
 
             Map<String, Object> data = new HashMap<>();
+            // optional, aber praktisch (Debug / spätere CollectionGroup-Auswertung)
             data.put("uid", uid);
             data.put("personId", personId);
+
             data.put("title", title);
             data.put("price", price);
             data.put("link", link);
             data.put("bought", bought);
             data.put("createdAt", Timestamp.now());
 
-            db.collection("gifts").add(data)
+            FirestorePaths.gifts(uid, personId)
+                    .add(data)
                     .addOnSuccessListener(r -> finish())
                     .addOnFailureListener(e ->
                             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
