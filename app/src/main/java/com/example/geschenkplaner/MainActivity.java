@@ -4,17 +4,18 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.PopupMenu;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.firebase.auth.FirebaseAuth;
 
 import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -35,12 +36,15 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        // Toolbar
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("GeschenkPlaner");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // immer sichtbar (laut Anforderung)
+            getSupportActionBar().setDisplayHomeAsUpEnabled(
+                    getSupportFragmentManager().getBackStackEntryCount() > 0
+            );
         }
 
         // Start: Home
@@ -48,53 +52,50 @@ public class MainActivity extends AppCompatActivity {
             replaceFragment(new HomeFragment(), false);
         }
 
+        // Back-Pfeil Klick
         toolbar.setNavigationOnClickListener(v -> {
-            // Zurück-Pfeil: Backstack poppen
             if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
                 getSupportFragmentManager().popBackStack();
+            }
+        });
+
+        // Backstack Listener -> Pfeil ein/aus
+        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
+            if (getSupportActionBar() != null) {
+                boolean showBack = getSupportFragmentManager().getBackStackEntryCount() > 0;
+                getSupportActionBar().setDisplayHomeAsUpEnabled(showBack);
             }
         });
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_toolbar, menu); // nur das Icon
+        getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_menu) {
-            showDropdownMenu();
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.menu_home) {
+            replaceFragment(new HomeFragment(), false);
+            return true;
+
+        } else if (id == R.id.menu_add_person) {
+            replaceFragment(new AddPersonFragment(), true);
+            return true;
+
+        } else if (id == R.id.menu_calendar) {
+            replaceFragment(new CalendarFragment(), true);
+            return true;
+
+        } else if (id == R.id.menu_settings) {
+            replaceFragment(new SettingsFragment(), true);
             return true;
         }
+
         return super.onOptionsItemSelected(item);
-    }
-
-    private void showDropdownMenu() {
-        PopupMenu popup = new PopupMenu(this, toolbar);
-        popup.getMenuInflater().inflate(R.menu.menu_main, popup.getMenu());
-
-        popup.setOnMenuItemClickListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.menu_home) {
-                replaceFragment(new HomeFragment(), false);
-                return true;
-            } else if (id == R.id.menu_add_person) {
-                replaceFragment(new AddPersonFragment(), true);
-                return true;
-            } else if (id == R.id.menu_calendar) {
-                replaceFragment(new CalendarFragment(), true);
-                return true;
-            } else if (id == R.id.menu_settings) {
-                replaceFragment(new SettingsFragment(), true);
-                return true;
-            }
-            return false;
-        });
-
-        popup.show();
     }
 
     public void replaceFragment(Fragment fragment, boolean addToBackstack) {
@@ -107,7 +108,6 @@ public class MainActivity extends AppCompatActivity {
         tx.commit();
     }
 
-    // Für HomeFragment-FAB
     public void navigateToAddPerson() {
         replaceFragment(new AddPersonFragment(), true);
     }
