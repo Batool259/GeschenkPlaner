@@ -7,7 +7,6 @@ public class GiftItem {
     public Double price;
     public boolean bought;
 
-    // WICHTIG: leerer Konstruktor für Firestore
     public GiftItem() {}
 
     public GiftItem(String id, String title, Double price, boolean bought) {

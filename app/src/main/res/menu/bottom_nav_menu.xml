@@ -7,11 +7,10 @@
     <item
         android:id="@+id/nav_add_persons"
         android:title="Person hinzufügen"
-        android:icon="@drawable/baseline_account_box_24" />
-
+        android:icon="@android:drawable/ic_menu_add"/>
     <item
         android:id="@+id/nav_calendar"
-        android:title="Kalendar"
+        android:title="Kalender"
         android:icon="@android:drawable/ic_menu_my_calendar"/>
     <item
         android:id="@+id/nav_settings"

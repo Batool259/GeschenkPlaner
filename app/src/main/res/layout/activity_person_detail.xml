@@ -6,12 +6,20 @@
     android:layout_height="match_parent"
     android:padding="12dp">
 
+    <com.google.android.material.appbar.MaterialToolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/colorPrimary"
+        app:titleTextColor="@android:color/white"
+        app:navigationIcon="@android:drawable/ic_media_previous" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="?attr/actionBarSize"
         android:orientation="vertical">
 
-        <!-- Header Karte (Person) -->
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -44,7 +52,7 @@
                         android:id="@+id/tvPersonName"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="John"
+                        android:text="—"
                         android:textStyle="bold"
                         android:textSize="18sp"/>
 
@@ -52,14 +60,13 @@
                         android:id="@+id/tvBirthdayHint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎂 Geburtstag in — Tagen"
+                        android:text="🎂 Geburtstag: —"
                         android:paddingTop="2dp"/>
                 </LinearLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <!-- Geschenke Liste -->
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvGifts"
             android:layout_width="match_parent"
@@ -67,14 +74,12 @@
             android:layout_weight="1"/>
     </LinearLayout>
 
-
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddGift"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:contentDescription="Add gift"
         app:srcCompat="@android:drawable/ic_input_add"
-        app:layout_anchorGravity="top|end"
-        android:layout_gravity="top|end"/>
-
+        android:layout_gravity="bottom|end"
+        android:layout_margin="16dp"/>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

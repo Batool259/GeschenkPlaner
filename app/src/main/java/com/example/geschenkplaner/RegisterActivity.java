@@ -29,7 +29,6 @@ public class RegisterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Views holen
         etUsername = findViewById(R.id.etUsername);
         etEmail = findViewById(R.id.etEmail);
         etPassword = findViewById(R.id.etPassword);
@@ -38,16 +37,13 @@ public class RegisterActivity extends AppCompatActivity {
         Button btnRegister = findViewById(R.id.btnRegister);
         TextView tvToLogin = findViewById(R.id.tvToLogin);
 
-        // Firebase initialisieren
         auth = FirebaseAuth.getInstance();
 
-        // Zurück zum Login
         tvToLogin.setOnClickListener(v -> {
             startActivity(new Intent(RegisterActivity.this, LoginActivity.class));
             finish();
         });
 
-        // Registrieren
         btnRegister.setOnClickListener(v -> attemptRegister());
     }
 
@@ -57,7 +53,6 @@ public class RegisterActivity extends AppCompatActivity {
         String p1 = etPassword.getText().toString();
         String p2 = etPassword2.getText().toString();
 
-        // Validierung
         if (TextUtils.isEmpty(username) || TextUtils.isEmpty(email) || TextUtils.isEmpty(p1) || TextUtils.isEmpty(p2)) {
             Toast.makeText(this, "Bitte alle Felder ausfüllen.", Toast.LENGTH_SHORT).show();
             return;
@@ -83,7 +78,6 @@ public class RegisterActivity extends AppCompatActivity {
             return;
         }
 
-        // Firebase User anlegen
         auth.createUserWithEmailAndPassword(email, p1)
                 .addOnCompleteListener(task -> {
                     if (!task.isSuccessful()) {
@@ -94,10 +88,8 @@ public class RegisterActivity extends AppCompatActivity {
                         return;
                     }
 
-                    // displayName (Benutzername) im Firebase-Profil speichern
                     FirebaseUser user = auth.getCurrentUser();
                     if (user == null) {
-                        Toast.makeText(this, "Registrierung erfolgreich, aber Benutzer nicht gefunden.", Toast.LENGTH_LONG).show();
                         startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                         finish();
                         return;
@@ -109,14 +101,6 @@ public class RegisterActivity extends AppCompatActivity {
 
                     user.updateProfile(profileUpdates)
                             .addOnCompleteListener(profileTask -> {
-                                if (profileTask.isSuccessful()) {
-                                    Toast.makeText(this, "Registrierung erfolgreich!", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    // Falls updateProfile fehlschlägt, ist der Account trotzdem erstellt.
-                                    Toast.makeText(this, "Registrierung erfolgreich, Benutzername konnte nicht gespeichert werden.", Toast.LENGTH_LONG).show();
-                                }
-
-                                // Nach erfolgreicher Registrierung direkt in die App
                                 startActivity(new Intent(RegisterActivity.this, MainActivity.class));
                                 finish();
                             });

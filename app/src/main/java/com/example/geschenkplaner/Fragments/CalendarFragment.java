@@ -1,11 +1,11 @@
 package com.example.geschenkplaner.Fragments;
 
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -14,13 +14,17 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.geschenkplaner.R;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
+import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Locale;
@@ -29,16 +33,22 @@ import java.util.Map;
 public class CalendarFragment extends Fragment {
 
     private CalendarView calendarView;
-    private TextView tvDate, tvList;
+    private TextView tvSelectedDate;
     private EditText etEvent;
-    private Button btnSave;
+    private View btnSave;
+
+    private RecyclerView rvEvents;
+    private EventAdapter adapter;
+
+    private TextView tvMarkedDays;
 
     private FirebaseFirestore db;
     private String uid;
     private String dateKey;
 
-    private final SimpleDateFormat sdf =
-            new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+
+    public CalendarFragment() {}
 
     @Nullable
     @Override
@@ -47,38 +57,48 @@ public class CalendarFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState
     ) {
-        View v = inflater.inflate(R.layout.fragment_calendar, container, false);
+        return inflater.inflate(R.layout.fragment_calendar, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View v, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(v, savedInstanceState);
 
         calendarView = v.findViewById(R.id.calendarView);
-        tvDate = v.findViewById(R.id.tvDate);
+        tvSelectedDate = v.findViewById(R.id.tvDate);
         etEvent = v.findViewById(R.id.etEvent);
         btnSave = v.findViewById(R.id.btnSave);
-        tvList = v.findViewById(R.id.tvList);
+        rvEvents = v.findViewById(R.id.rvEvents);
+        tvMarkedDays = v.findViewById(R.id.tvMarkedDays);
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Toast.makeText(getContext(), "Bitte einloggen", Toast.LENGTH_SHORT).show();
-            return v;
+            return;
         }
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         db = FirebaseFirestore.getInstance();
 
+        adapter = new EventAdapter();
+        rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
+        rvEvents.setAdapter(adapter);
+
         // Startdatum = heute
         dateKey = sdf.format(Calendar.getInstance().getTime());
-        tvDate.setText("Datum: " + dateKey);
-        loadEvents();
+        tvSelectedDate.setText("🟣 " + dateKey);
+
+        loadEventsForSelectedDate();
+        loadMarkedDays();
 
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
             Calendar c = Calendar.getInstance();
             c.set(year, month, dayOfMonth);
             dateKey = sdf.format(c.getTime());
-            tvDate.setText("Datum: " + dateKey);
-            loadEvents();
+            tvSelectedDate.setText("🟣 " + dateKey);
+            loadEventsForSelectedDate();
         });
 
-        btnSave.setOnClickListener(v1 -> saveEvent());
-
-        return v;
+        btnSave.setOnClickListener(x -> saveEvent());
     }
 
     private void saveEvent() {
@@ -93,34 +113,160 @@ public class CalendarFragment extends Fragment {
         data.put("dateKey", dateKey);
         data.put("text", text);
         data.put("createdAt", Timestamp.now());
+        data.put("updatedAt", Timestamp.now());
 
         db.collection("events")
                 .add(data)
                 .addOnSuccessListener(r -> {
                     etEvent.setText("");
-                    loadEvents();
+                    loadEventsForSelectedDate();
+                    loadMarkedDays();
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(getContext(), "Fehler: " + e.getMessage(),
-                                Toast.LENGTH_SHORT).show()
+                        Toast.makeText(getContext(), "Fehler: " + e.getMessage(), Toast.LENGTH_SHORT).show()
                 );
     }
 
-    private void loadEvents() {
+    private void loadEventsForSelectedDate() {
         db.collection("events")
                 .whereEqualTo("uid", uid)
                 .whereEqualTo("dateKey", dateKey)
                 .get()
                 .addOnSuccessListener(qs -> {
-                    if (qs.isEmpty()) {
-                        tvList.setText("Keine Einträge");
-                        return;
+                    ArrayList<EventRow> list = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : qs) {
+                        list.add(new EventRow(
+                                doc.getId(),
+                                doc.getString("text") != null ? doc.getString("text") : "—"
+                        ));
                     }
-                    StringBuilder sb = new StringBuilder();
-                    for (var doc : qs.getDocuments()) {
-                        sb.append("• ").append(doc.getString("text")).append("\n");
-                    }
-                    tvList.setText(sb.toString());
+                    adapter.setItems(list);
                 });
+    }
+
+    private void loadMarkedDays() {
+        // simple: alle event-dateKeys sammeln und als Liste anzeigen
+        db.collection("events")
+                .whereEqualTo("uid", uid)
+                .get()
+                .addOnSuccessListener(qs -> {
+                    ArrayList<String> days = new ArrayList<>();
+                    for (QueryDocumentSnapshot doc : qs) {
+                        String dk = doc.getString("dateKey");
+                        if (dk != null && !days.contains(dk)) days.add(dk);
+                    }
+                    if (days.isEmpty()) {
+                        tvMarkedDays.setText("Keine markierten Tage");
+                    } else {
+                        StringBuilder sb = new StringBuilder("Markiert: ");
+                        for (int i = 0; i < days.size(); i++) {
+                            sb.append("🟣 ").append(days.get(i));
+                            if (i < days.size() - 1) sb.append(" · ");
+                        }
+                        tvMarkedDays.setText(sb.toString());
+                    }
+                });
+    }
+
+    // --- Adapter + Model ---
+    private static class EventRow {
+        final String id;
+        final String text;
+
+        EventRow(String id, String text) {
+            this.id = id;
+            this.text = text;
+        }
+    }
+
+    private class EventAdapter extends RecyclerView.Adapter<EventVH> {
+
+        private final ArrayList<EventRow> items = new ArrayList<>();
+
+        void setItems(ArrayList<EventRow> list) {
+            items.clear();
+            items.addAll(list);
+            notifyDataSetChanged();
+        }
+
+        @NonNull
+        @Override
+        public EventVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            View v = LayoutInflater.from(parent.getContext())
+                    .inflate(android.R.layout.simple_list_item_1, parent, false);
+            return new EventVH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull EventVH holder, int position) {
+            EventRow row = items.get(position);
+            holder.bind(row);
+
+            holder.itemView.setOnClickListener(v -> showEditDialog(row));
+            holder.itemView.setOnLongClickListener(v -> {
+                showDeleteDialog(row);
+                return true;
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+    }
+
+    private static class EventVH extends RecyclerView.ViewHolder {
+        final TextView tv;
+
+        EventVH(@NonNull View itemView) {
+            super(itemView);
+            tv = itemView.findViewById(android.R.id.text1);
+        }
+
+        void bind(EventRow row) {
+            tv.setText("• " + row.text);
+        }
+    }
+
+    private void showEditDialog(EventRow row) {
+        EditText input = new EditText(requireContext());
+        input.setText(row.text);
+
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Eintrag bearbeiten")
+                .setView(input)
+                .setPositiveButton("Speichern", (d, w) -> {
+                    String newText = input.getText().toString().trim();
+                    if (TextUtils.isEmpty(newText)) return;
+
+                    Map<String, Object> update = new HashMap<>();
+                    update.put("text", newText);
+                    update.put("updatedAt", Timestamp.now());
+
+                    db.collection("events").document(row.id)
+                            .update(update)
+                            .addOnSuccessListener(x -> {
+                                loadEventsForSelectedDate();
+                                loadMarkedDays();
+                            });
+                })
+                .setNegativeButton("Abbrechen", null)
+                .show();
+    }
+
+    private void showDeleteDialog(EventRow row) {
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Eintrag löschen?")
+                .setMessage(row.text)
+                .setPositiveButton("Löschen", (d, w) -> {
+                    db.collection("events").document(row.id)
+                            .delete()
+                            .addOnSuccessListener(x -> {
+                                loadEventsForSelectedDate();
+                                loadMarkedDays();
+                            });
+                })
+                .setNegativeButton("Abbrechen", null)
+                .show();
     }
 }

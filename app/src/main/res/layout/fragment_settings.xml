@@ -27,6 +27,13 @@
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Logout" />
+        android:text="Ausloggen" />
+
+    <Button
+        android:id="@+id/btnResetPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Passwort zurücksetzen"
+        android:layout_marginTop="10dp" />
 
 </LinearLayout>

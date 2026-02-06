@@ -1,10 +1,11 @@
 package com.example.geschenkplaner;
 
-import com.google.firebase.auth.FirebaseAuth;
 import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+
+import com.google.firebase.auth.FirebaseAuth;
 
 /** Startet je nach Login-Status Login oder die App. */
 public class StartActivity extends AppCompatActivity {

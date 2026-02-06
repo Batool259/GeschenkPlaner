@@ -2,12 +2,16 @@ package com.example.geschenkplaner;
 
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.widget.Button;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.example.geschenkplaner.R;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.button.MaterialButtonToggleGroup;
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -26,6 +30,13 @@ public class AddGiftActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_gift);
 
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Geschenk hinzufügen");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
         String personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
         if (personId == null) { finish(); return; }
 
@@ -34,19 +45,26 @@ public class AddGiftActivity extends AppCompatActivity {
 
         FirebaseFirestore db = FirebaseFirestore.getInstance();
 
-        EditText etTitle = findViewById(R.id.etTitle);
+        EditText etName = findViewById(R.id.etGiftName);
         EditText etPrice = findViewById(R.id.etPrice);
-        Button btnPlanned = findViewById(R.id.btnPlanned);
-        Button btnBought = findViewById(R.id.btnBought);
-        Button btnSave = findViewById(R.id.btnSave);
+        EditText etLink = findViewById(R.id.etLink);
 
-        btnPlanned.setOnClickListener(v -> bought = false);
-        btnBought.setOnClickListener(v -> bought = true);
+        MaterialButtonToggleGroup toggle = findViewById(R.id.toggleStatus);
+        MaterialButton btnSave = findViewById(R.id.btnSaveGift);
+
+        // default: geplant
+        bought = false;
+
+        toggle.addOnButtonCheckedListener((group, checkedId, isChecked) -> {
+            if (!isChecked) return;
+            if (checkedId == R.id.btnBought) bought = true;
+            if (checkedId == R.id.btnPlanned) bought = false;
+        });
 
         btnSave.setOnClickListener(v -> {
-            String title = etTitle.getText().toString().trim();
+            String title = etName.getText().toString().trim();
             if (TextUtils.isEmpty(title)) {
-                Toast.makeText(this, "Titel fehlt", Toast.LENGTH_SHORT).show();
+                Toast.makeText(this, "Name fehlt", Toast.LENGTH_SHORT).show();
                 return;
             }
 
@@ -56,11 +74,14 @@ public class AddGiftActivity extends AppCompatActivity {
                 try { price = Double.parseDouble(priceStr); } catch (Exception ignored) {}
             }
 
+            String link = etLink.getText().toString().trim();
+
             Map<String, Object> data = new HashMap<>();
             data.put("uid", uid);
             data.put("personId", personId);
             data.put("title", title);
             data.put("price", price);
+            data.put("link", link);
             data.put("bought", bought);
             data.put("createdAt", Timestamp.now());
 
@@ -69,5 +90,14 @@ public class AddGiftActivity extends AppCompatActivity {
                     .addOnFailureListener(e ->
                             Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 }

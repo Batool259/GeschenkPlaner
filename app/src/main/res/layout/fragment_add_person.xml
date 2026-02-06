@@ -6,27 +6,69 @@
     android:layout_height="match_parent"
     android:padding="16dp">
 
-    <!-- Überschrift -->
     <TextView
         android:id="@+id/tvAddPersonTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Person hinzufügen"
+        android:text="Add Person"
         android:textSize="22sp"
         android:textStyle="bold"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Name Eingabe -->
     <EditText
-        android:id="@+id/etTitle"
+        android:id="@+id/etPersonName"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:hint="Name der Person"
+        android:hint="Name"
         android:padding="16dp"
         android:layout_marginTop="12dp"
         app:layout_constraintTop_toBottomOf="@id/tvAddPersonTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <EditText
+        android:id="@+id/etPersonBirthday"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Geburtstag (z.B. 12.03.2003)"
+        android:padding="16dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/etPersonName"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <EditText
+        android:id="@+id/etPersonNote"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:hint="Notiz (optional)"
+        android:padding="16dp"
+        android:layout_marginTop="10dp"
+        app:layout_constraintTop_toBottomOf="@id/etPersonBirthday"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnSavePerson"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Save"
+        android:layout_marginTop="18dp"
+        app:cornerRadius="20dp"
+        app:layout_constraintTop_toBottomOf="@id/etPersonNote"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnCancelPerson"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="Cancel"
+        android:layout_marginTop="10dp"
+        app:cornerRadius="20dp"
+        app:layout_constraintTop_toBottomOf="@id/btnSavePerson"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

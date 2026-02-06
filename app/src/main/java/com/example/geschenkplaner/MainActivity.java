@@ -2,22 +2,23 @@ package com.example.geschenkplaner;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.widget.PopupMenu;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.firebase.auth.FirebaseAuth;
-
+import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
-import com.example.geschenkplaner.Fragments.AddPersonFragment;
-
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String KEY_SELECTED_ITEM = "selected_bottom_item";
+    private MaterialToolbar toolbar;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -26,7 +27,6 @@ public class MainActivity extends AppCompatActivity {
         // Login-Check
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Intent i = new Intent(this, LoginActivity.class);
-            // optional aber sauber: verhindert "Zurück" in MainActivity
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
             finish();
@@ -35,49 +35,80 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("GeschenkPlaner");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true); // immer sichtbar (laut Anforderung)
+        }
+
+        // Start: Home
         if (savedInstanceState == null) {
-            replaceFragment(new HomeFragment());
+            replaceFragment(new HomeFragment(), false);
         }
 
-        bottomNav.setOnItemSelectedListener(item -> {
-            int id = item.getItemId();
-
-            if (id == R.id.nav_home) {
-                replaceFragment(new HomeFragment());
-                return true;
-            } else if (id == R.id.nav_add_persons) {
-                replaceFragment(new AddPersonFragment());
-                return true;
-            } else if (id == R.id.nav_calendar) {
-                replaceFragment(new CalendarFragment());
-                return true;
-            } else if (id == R.id.nav_settings) {
-                replaceFragment(new SettingsFragment());
-                return true;
+        toolbar.setNavigationOnClickListener(v -> {
+            // Zurück-Pfeil: Backstack poppen
+            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
+                getSupportFragmentManager().popBackStack();
             }
-
-            return false;
         });
-
-        if (savedInstanceState != null) {
-            int selected = savedInstanceState.getInt(KEY_SELECTED_ITEM, R.id.nav_home);
-            bottomNav.setSelectedItemId(selected);
-        }
-    }
-
-    public void replaceFragment(Fragment fragment) {
-        getSupportFragmentManager()
-                .beginTransaction()
-                .replace(R.id.fragmentContainer, fragment)
-                .commit();
     }
 
     @Override
-    protected void onSaveInstanceState(Bundle outState) {
-        super.onSaveInstanceState(outState);
-        BottomNavigationView bottomNav = findViewById(R.id.bottomNav);
-        outState.putInt(KEY_SELECTED_ITEM, bottomNav.getSelectedItemId());
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_toolbar, menu); // nur das Icon
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_menu) {
+            showDropdownMenu();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    private void showDropdownMenu() {
+        PopupMenu popup = new PopupMenu(this, toolbar);
+        popup.getMenuInflater().inflate(R.menu.menu_main, popup.getMenu());
+
+        popup.setOnMenuItemClickListener(item -> {
+            int id = item.getItemId();
+
+            if (id == R.id.menu_home) {
+                replaceFragment(new HomeFragment(), false);
+                return true;
+            } else if (id == R.id.menu_add_person) {
+                replaceFragment(new AddPersonFragment(), true);
+                return true;
+            } else if (id == R.id.menu_calendar) {
+                replaceFragment(new CalendarFragment(), true);
+                return true;
+            } else if (id == R.id.menu_settings) {
+                replaceFragment(new SettingsFragment(), true);
+                return true;
+            }
+            return false;
+        });
+
+        popup.show();
+    }
+
+    public void replaceFragment(Fragment fragment, boolean addToBackstack) {
+        var tx = getSupportFragmentManager()
+                .beginTransaction()
+                .replace(R.id.fragmentContainer, fragment);
+
+        if (addToBackstack) tx.addToBackStack(null);
+
+        tx.commit();
+    }
+
+    // Für HomeFragment-FAB
+    public void navigateToAddPerson() {
+        replaceFragment(new AddPersonFragment(), true);
     }
 }

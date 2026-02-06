@@ -14,14 +14,12 @@
         android:padding="16dp"
         android:orientation="horizontal">
 
-        <!-- Avatar -->
         <ImageView
             android:id="@+id/imgAvatar"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:src="@mipmap/ic_launcher_round"/>
 
-        <!-- Name + Info -->
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
@@ -38,7 +36,7 @@
 
             <TextView
                 android:id="@+id/tvInfo"
-                android:text="Birthday in 5 days"
+                android:text="Geburtstag: —"
                 android:textSize="14sp"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"/>

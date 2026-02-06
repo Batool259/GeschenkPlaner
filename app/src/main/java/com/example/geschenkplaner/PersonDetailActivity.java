@@ -2,13 +2,17 @@ package com.example.geschenkplaner;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.ViewGroup;
+
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -16,9 +20,6 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
-
-import Adapter.GiftAdapter;
-import model.GiftItem;
 
 public class PersonDetailActivity extends AppCompatActivity {
 
@@ -29,14 +30,21 @@ public class PersonDetailActivity extends AppCompatActivity {
     private String personId;
 
     private TextView tvName, tvBirthdayHint;
-    private GiftAdapter adapter;
+    private GiftAdapterSimple adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_person_detail);
 
-        // 1) User check
+        MaterialToolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle("Personendetails");
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
+
+        // User check
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -46,7 +54,6 @@ public class PersonDetailActivity extends AppCompatActivity {
         uid = user.getUid();
         db = FirebaseFirestore.getInstance();
 
-        // 2) personId holen
         personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
         if (personId == null || personId.isEmpty()) {
             Toast.makeText(this, "personId fehlt", Toast.LENGTH_SHORT).show();
@@ -54,13 +61,12 @@ public class PersonDetailActivity extends AppCompatActivity {
             return;
         }
 
-        // 3) Views
         tvName = findViewById(R.id.tvPersonName);
         tvBirthdayHint = findViewById(R.id.tvBirthdayHint);
 
         RecyclerView rv = findViewById(R.id.rvGifts);
         rv.setLayoutManager(new LinearLayoutManager(this));
-        adapter = new GiftAdapter();
+        adapter = new GiftAdapterSimple();
         rv.setAdapter(adapter);
 
         FloatingActionButton fab = findViewById(R.id.fabAddGift);
@@ -70,7 +76,6 @@ public class PersonDetailActivity extends AppCompatActivity {
             startActivity(i);
         });
 
-        // 4) Laden
         loadPerson();
         loadGifts();
     }
@@ -82,7 +87,10 @@ public class PersonDetailActivity extends AppCompatActivity {
     }
 
     private void loadPerson() {
-        db.collection("persons")
+        // WICHTIG: passt zu HomeFragment: users/{uid}/persons/{personId}
+        db.collection("users")
+                .document(uid)
+                .collection("persons")
                 .document(personId)
                 .get()
                 .addOnSuccessListener(doc -> {
@@ -92,18 +100,16 @@ public class PersonDetailActivity extends AppCompatActivity {
                         return;
                     }
 
-                    String owner = doc.getString("uid");
-                    if (owner != null && !owner.equals(uid)) {
-                        Toast.makeText(this, "Kein Zugriff", Toast.LENGTH_SHORT).show();
-                        finish();
-                        return;
-                    }
-
                     String name = doc.getString("name");
+                    String birthday = doc.getString("birthday");
+
                     tvName.setText(name != null ? name : "—");
 
-                    // erstmal einfach
-                    tvBirthdayHint.setText("🎂 Geburtstag: —");
+                    if (birthday != null && !birthday.trim().isEmpty()) {
+                        tvBirthdayHint.setText("🎂 Geburtstag: " + birthday);
+                    } else {
+                        tvBirthdayHint.setText("🎂 Geburtstag: —");
+                    }
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Fehler Person: " + e.getMessage(), Toast.LENGTH_LONG).show()
@@ -116,7 +122,7 @@ public class PersonDetailActivity extends AppCompatActivity {
                 .whereEqualTo("personId", personId)
                 .get()
                 .addOnSuccessListener(qs -> {
-                    ArrayList<GiftItem> list = new ArrayList<>();
+                    ArrayList<GiftRow> list = new ArrayList<>();
 
                     for (QueryDocumentSnapshot doc : qs) {
                         String id = doc.getId();
@@ -124,7 +130,7 @@ public class PersonDetailActivity extends AppCompatActivity {
                         Double price = doc.getDouble("price");
                         Boolean bought = doc.getBoolean("bought");
 
-                        list.add(new GiftItem(
+                        list.add(new GiftRow(
                                 id,
                                 title != null ? title : "—",
                                 price,
@@ -137,5 +143,81 @@ public class PersonDetailActivity extends AppCompatActivity {
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Fehler Gifts: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
+    // ---- Simple Adapter ----
+    private static class GiftRow {
+        final String id;
+        final String title;
+        final Double price;
+        final boolean bought;
+
+        GiftRow(String id, String title, Double price, boolean bought) {
+            this.id = id;
+            this.title = title;
+            this.price = price;
+            this.bought = bought;
+        }
+    }
+
+    private class GiftAdapterSimple extends RecyclerView.Adapter<GiftVH> {
+
+        private final ArrayList<GiftRow> items = new ArrayList<>();
+
+        void setItems(ArrayList<GiftRow> list) {
+            items.clear();
+            items.addAll(list);
+            notifyDataSetChanged();
+        }
+
+        @Override
+        public GiftVH onCreateViewHolder(ViewGroup parent, int viewType) {
+            var v = getLayoutInflater().inflate(R.layout.item_gift, parent, false);
+            return new GiftVH(v);
+        }
+
+        @Override
+        public void onBindViewHolder(GiftVH holder, int position) {
+            GiftRow row = items.get(position);
+            holder.bind(row);
+            holder.itemView.setOnClickListener(v -> {
+                Intent i = new Intent(PersonDetailActivity.this, GiftDetailActivity.class);
+                i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
+                startActivity(i);
+            });
+        }
+
+        @Override
+        public int getItemCount() {
+            return items.size();
+        }
+    }
+
+    private static class GiftVH extends RecyclerView.ViewHolder {
+
+        private final TextView tvTitle, tvNote;
+        private final com.google.android.material.chip.Chip chipPrice;
+
+        GiftVH(android.view.View itemView) {
+            super(itemView);
+            tvTitle = itemView.findViewById(R.id.tvGiftTitle);
+            tvNote = itemView.findViewById(R.id.tvGiftNote);
+            chipPrice = itemView.findViewById(R.id.chipPrice);
+        }
+
+        void bind(GiftRow row) {
+            tvTitle.setText(row.title);
+            tvNote.setText(row.bought ? "Gekauft ✅" : "Geplant");
+            chipPrice.setText("€ " + (row.price != null ? row.price : "—"));
+        }
     }
 }

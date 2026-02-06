@@ -12,12 +12,19 @@
         android:text="Kalender"
         android:textSize="24sp"
         android:textStyle="bold"
-        android:layout_marginBottom="16dp" />
+        android:layout_marginBottom="10dp" />
 
     <CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
+
+    <TextView
+        android:id="@+id/tvMarkedDays"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingTop="10dp"
+        android:text="Keine markierten Tage"/>
 
     <TextView
         android:id="@+id/tvDate"
@@ -38,12 +45,11 @@
         android:layout_height="wrap_content"
         android:text="Speichern" />
 
-    <TextView
-        android:id="@+id/tvList"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvEvents"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:paddingTop="10dp"
-        android:text="Einträge erscheinen hier..." />
+        android:paddingTop="10dp" />
 
 </LinearLayout>
