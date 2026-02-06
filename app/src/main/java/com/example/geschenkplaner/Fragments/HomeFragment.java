@@ -1,11 +1,14 @@
 package com.example.geschenkplaner.Fragments;
 
-import android.content.Intent;
+import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import com.example.geschenkplaner.MainActivity;
+
+
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,7 +16,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.geschenkplaner.AddPersonActivity;
 import com.example.geschenkplaner.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
@@ -87,9 +89,12 @@ public class HomeFragment extends Fragment {
         rvPersons.setAdapter(adapter);
 
         // FAB: Person hinzufügen (bei euch aktuell Activity)
-        fabAddPerson.setOnClickListener(v ->
-                startActivity(new Intent(requireContext(), AddPersonActivity.class))
-        );
+        fabAddPerson.setOnClickListener(v -> {
+            if (requireActivity() instanceof MainActivity) {
+                ((MainActivity) requireActivity()).replaceFragment(new AddPersonFragment());
+            }
+        });
+
 
         updateEmptyState();
     }

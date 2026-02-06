@@ -15,7 +15,6 @@
         <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".LoginActivity" android:exported="false" />
         <activity android:name=".RegisterActivity" android:exported="false" />
-        <activity android:name=".AddPersonActivity" android:exported="false" />
         <activity android:name=".PersonDetailActivity" />
         <activity android:name=".AddGiftActivity" />
         <activity android:name=".GiftDetailActivity" />
