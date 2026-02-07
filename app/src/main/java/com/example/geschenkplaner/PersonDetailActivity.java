@@ -3,20 +3,21 @@ package com.example.geschenkplaner;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.chip.Chip;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
@@ -25,11 +26,13 @@ public class PersonDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_PERSON_ID = "personId";
 
-    private FirebaseFirestore db;
     private String uid;
     private String personId;
 
-    private TextView tvName, tvBirthdayHint;
+    private TextView tvPersonName;
+    private TextView tvBirthdayHint;
+    private TextView tvPersonInitial;
+
     private GiftAdapterSimple adapter;
 
     @Override
@@ -52,17 +55,17 @@ public class PersonDetailActivity extends AppCompatActivity {
             return;
         }
         uid = user.getUid();
-        db = FirebaseFirestore.getInstance();
 
         personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
-        if (personId == null || personId.isEmpty()) {
+        if (personId == null || personId.trim().isEmpty()) {
             Toast.makeText(this, "personId fehlt", Toast.LENGTH_SHORT).show();
             finish();
             return;
         }
 
-        tvName = findViewById(R.id.tvPersonName);
+        tvPersonName = findViewById(R.id.tvPersonName);
         tvBirthdayHint = findViewById(R.id.tvBirthdayHint);
+        tvPersonInitial = findViewById(R.id.tvPersonInitial);
 
         RecyclerView rv = findViewById(R.id.rvGifts);
         rv.setLayoutManager(new LinearLayoutManager(this));
@@ -99,17 +102,27 @@ public class PersonDetailActivity extends AppCompatActivity {
                     String name = doc.getString("name");
                     String birthday = doc.getString("birthday");
 
-                    tvName.setText(name != null ? name : "—");
+                    String safeName = (name != null && !name.trim().isEmpty()) ? name.trim() : "—";
+                    tvPersonName.setText(safeName);
 
                     if (birthday != null && !birthday.trim().isEmpty()) {
-                        tvBirthdayHint.setText("🎂 Geburtstag: " + birthday);
+                        tvBirthdayHint.setText("🎂 Geburtstag: " + birthday.trim());
                     } else {
                         tvBirthdayHint.setText("🎂 Geburtstag: —");
                     }
+
+                    tvPersonInitial.setText(getInitial(safeName));
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Fehler Person: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
+    }
+
+    private String getInitial(String name) {
+        if (name == null) return "?";
+        String n = name.trim();
+        if (n.isEmpty() || n.equals("—") || n.equals("(Ohne Name)")) return "?";
+        return ("" + Character.toUpperCase(n.charAt(0)));
     }
 
     private void loadGifts() {
@@ -140,7 +153,7 @@ public class PersonDetailActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
@@ -173,19 +186,20 @@ public class PersonDetailActivity extends AppCompatActivity {
             notifyDataSetChanged();
         }
 
+        @NonNull
         @Override
-        public GiftVH onCreateViewHolder(ViewGroup parent, int viewType) {
-            var v = getLayoutInflater().inflate(R.layout.item_gift, parent, false);
+        public GiftVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            android.view.View v = getLayoutInflater().inflate(R.layout.item_gift, parent, false);
             return new GiftVH(v);
         }
 
         @Override
-        public void onBindViewHolder(GiftVH holder, int position) {
+        public void onBindViewHolder(@NonNull GiftVH holder, int position) {
             GiftRow row = items.get(position);
             holder.bind(row);
+
             holder.itemView.setOnClickListener(v -> {
                 Intent i = new Intent(PersonDetailActivity.this, GiftDetailActivity.class);
-                i.putExtra(GiftDetailActivity.EXTRA_PERSON_ID, personId);
                 i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
                 startActivity(i);
             });
@@ -199,10 +213,11 @@ public class PersonDetailActivity extends AppCompatActivity {
 
     private static class GiftVH extends RecyclerView.ViewHolder {
 
-        private final TextView tvTitle, tvNote;
-        private final com.google.android.material.chip.Chip chipPrice;
+        private final TextView tvTitle;
+        private final TextView tvNote;
+        private final Chip chipPrice;
 
-        GiftVH(android.view.View itemView) {
+        GiftVH(@NonNull android.view.View itemView) {
             super(itemView);
             tvTitle = itemView.findViewById(R.id.tvGiftTitle);
             tvNote = itemView.findViewById(R.id.tvGiftNote);

@@ -23,23 +23,27 @@
         <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
             app:cardCornerRadius="16dp"
-            app:cardElevation="2dp"
-            android:layout_marginBottom="12dp">
+            app:cardElevation="2dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
                 android:orientation="horizontal"
-                android:padding="12dp"
-                android:gravity="center_vertical">
+                android:padding="12dp">
 
-                <ImageView
-                    android:id="@+id/imgPerson"
+                <TextView
+                    android:id="@+id/tvPersonInitial"
                     android:layout_width="52dp"
                     android:layout_height="52dp"
-                    android:src="@mipmap/ic_launcher_round"
-                    android:scaleType="centerCrop" />
+                    android:background="@drawable/bg_initial_circle"
+                    android:gravity="center"
+                    android:text="?"
+                    android:textColor="@android:color/white"
+                    android:textSize="18sp"
+                    android:textStyle="bold" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -53,15 +57,15 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="—"
-                        android:textStyle="bold"
-                        android:textSize="18sp"/>
+                        android:textSize="18sp"
+                        android:textStyle="bold" />
 
                     <TextView
                         android:id="@+id/tvBirthdayHint"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="🎂 Geburtstag: —"
-                        android:paddingTop="2dp"/>
+                        android:paddingTop="2dp"
+                        android:text="🎂 Geburtstag: —" />
                 </LinearLayout>
 
             </LinearLayout>
@@ -71,15 +75,16 @@
             android:id="@+id/rvGifts"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
     </LinearLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddGift"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:contentDescription="Add gift"
-        app:srcCompat="@android:drawable/ic_input_add"
         android:layout_gravity="bottom|end"
-        android:layout_margin="16dp"/>
+        android:layout_margin="16dp"
+        android:contentDescription="Add gift"
+        app:srcCompat="@android:drawable/ic_input_add" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
