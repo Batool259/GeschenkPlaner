@@ -79,14 +79,22 @@
                         android:textSize="18sp"
                         android:layout_marginBottom="8dp"/>
 
-                    <TextView
-                        android:id="@+id/tvTitle"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="—"
-                        android:textStyle="bold"
-                        android:textSize="20sp"
-                        android:layout_marginBottom="10dp"/>
+                        android:layout_marginBottom="10dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etTitle"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Geschenkname"
+                            android:textSize="15sp"
+                            android:textStyle="bold"
+                            android:inputType="textCapSentences"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
 
                     <!-- PREIS Anzeige -->
                     <TextView

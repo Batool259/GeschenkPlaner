@@ -25,11 +25,18 @@ public class AddGiftActivity extends AppCompatActivity {
     private String uid;
     private String personId;
 
-    private TextView tvTitle, tvPrice, tvLink, tvNote, tvStatus;
-    private View bottomBar;
+    // Titel
+    private TextInputLayout tilTitle;
+    private TextInputEditText etTitle;
 
+    // Anzeige
+    private TextView tvPrice, tvLink, tvNote, tvStatus;
+
+    // Edit
     private TextInputLayout tilPrice, tilLink, tilNote;
     private TextInputEditText etPrice, etLink, etNote;
+
+    private View bottomBar;
 
     private boolean bought = false;
 
@@ -38,6 +45,7 @@ public class AddGiftActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_gift);
 
+        // Toolbar
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
@@ -45,21 +53,21 @@ public class AddGiftActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // Nur personId nötig!
+        // personId
         personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
         if (personId == null) { finish(); return; }
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Bind Views (dein XML hat diese IDs)
-        tvTitle  = findViewById(R.id.tvTitle);
+        // Bind Views
+        tilTitle = findViewById(R.id.tilTitle);
+        etTitle  = findViewById(R.id.etTitle);
+
         tvPrice  = findViewById(R.id.tvPrice);
         tvLink   = findViewById(R.id.tvLink);
         tvNote   = findViewById(R.id.tvNote);
         tvStatus = findViewById(R.id.tvStatus);
-
-        bottomBar = findViewById(R.id.bottomBar);
 
         tilPrice = findViewById(R.id.tilPrice);
         tilLink  = findViewById(R.id.tilLink);
@@ -69,17 +77,14 @@ public class AddGiftActivity extends AppCompatActivity {
         etLink  = findViewById(R.id.etLink);
         etNote  = findViewById(R.id.etNote);
 
-        // Titel Platzhalter (weil du kein Feld für Name hast)
-        // Wenn du ein Namensfeld willst: sag, dann bauen wir etTitle ein.
-        tvTitle.setText("Neues Geschenk");
+        bottomBar = findViewById(R.id.bottomBar);
 
-        // Für Add: direkt Edit-Mode an
-        enterEditMode();
-
+        // Upload (Platzhalter)
         findViewById(R.id.btnUploadImage).setOnClickListener(v ->
-                Toast.makeText(this, "Upload kommt als nächstes 🙂", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Bild-Upload kommt später 🙂", Toast.LENGTH_SHORT).show()
         );
 
+        // Status Buttons
         findViewById(R.id.btnMarkBought).setOnClickListener(v -> {
             bought = true;
             renderStatus();
@@ -90,11 +95,13 @@ public class AddGiftActivity extends AppCompatActivity {
             renderStatus();
         });
 
-        // Bei Add brauchst du KEIN Bearbeiten/Löschen:
+        // Add → kein Bearbeiten / Löschen
         findViewById(R.id.btnEdit).setVisibility(View.GONE);
         findViewById(R.id.btnDeleteGift).setVisibility(View.GONE);
 
-        // Bottom Buttons
+        // BottomBar immer sichtbar bei Add
+        bottomBar.setVisibility(View.VISIBLE);
+
         findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
         findViewById(R.id.btnSave).setOnClickListener(v -> saveNewGift());
 
@@ -105,21 +112,18 @@ public class AddGiftActivity extends AppCompatActivity {
         tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
     }
 
-    private void enterEditMode() {
-        // Anzeige aus, Eingabe an
-        tvPrice.setVisibility(View.GONE);
-        tvLink.setVisibility(View.GONE);
-        tvNote.setVisibility(View.GONE);
-
-        tilPrice.setVisibility(View.VISIBLE);
-        tilLink.setVisibility(View.VISIBLE);
-        tilNote.setVisibility(View.VISIBLE);
-
-        // BottomBar bei Add immer sichtbar
-        bottomBar.setVisibility(View.VISIBLE);
-    }
-
     private void saveNewGift() {
+        String title = etTitle.getText() != null
+                ? etTitle.getText().toString().trim()
+                : "";
+
+        if (title.isEmpty()) {
+            tilTitle.setError("Bitte Geschenkname eingeben");
+            return;
+        } else {
+            tilTitle.setError(null);
+        }
+
         String p = etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
         String l = etLink.getText() != null ? etLink.getText().toString().trim() : "";
         String n = etNote.getText() != null ? etNote.getText().toString().trim() : "";
@@ -134,14 +138,9 @@ public class AddGiftActivity extends AppCompatActivity {
             }
         }
 
-        // WICHTIG: Du hast in deinem Add-Layout kein Name-Feld.
-        // Wir speichern erstmal einen Default-Titel.
-        String title = "Neues Geschenk";
-
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
         data.put("personId", personId);
-
         data.put("title", title);
         data.put("price", price);
         data.put("link", l);
