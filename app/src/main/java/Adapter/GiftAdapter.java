@@ -22,6 +22,11 @@ import java.util.Locale;
 public class GiftAdapter extends RecyclerView.Adapter<GiftAdapter.VH> {
 
     private final List<GiftItem> items = new ArrayList<>();
+    private String personId; // ✅ wichtig
+
+    public void setPersonId(String personId) {
+        this.personId = personId;
+    }
 
     public void setItems(List<GiftItem> list) {
         items.clear();
@@ -41,27 +46,25 @@ public class GiftAdapter extends RecyclerView.Adapter<GiftAdapter.VH> {
     public void onBindViewHolder(@NonNull VH h, int position) {
         GiftItem g = items.get(position);
 
-        // Titel
         String title = (g != null && g.title != null && !g.title.trim().isEmpty())
                 ? g.title.trim()
                 : "—";
         h.tvTitle.setText(title);
 
-        // Status
         boolean bought = g != null && g.bought;
         h.tvNote.setText(bought ? "✅ Gekauft" : "🟡 Geplant");
 
-        // Preis
         if (g != null && g.price != null) {
             h.chipPrice.setText(String.format(Locale.getDefault(), "€ %.2f", g.price));
         } else {
             h.chipPrice.setText("€ —");
         }
 
-        // Klick → Detail
         h.itemView.setOnClickListener(v -> {
             if (g == null || g.id == null) return;
+
             Intent i = new Intent(v.getContext(), GiftDetailActivity.class);
+            i.putExtra(GiftDetailActivity.EXTRA_PERSON_ID, personId); // ✅ dazu
             i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, g.id);
             v.getContext().startActivity(i);
         });

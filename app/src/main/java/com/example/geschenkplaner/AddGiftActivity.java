@@ -12,6 +12,7 @@ import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.HashMap;
@@ -20,34 +21,17 @@ import java.util.Map;
 public class AddGiftActivity extends AppCompatActivity {
 
     public static final String EXTRA_PERSON_ID = "personId";
-    public static final String EXTRA_GIFT_ID = "giftId";
 
     private String uid;
     private String personId;
-    private String giftId;
 
-    // Anzeige
     private TextView tvTitle, tvPrice, tvLink, tvNote, tvStatus;
-
-    // Edit UI
     private View bottomBar;
+
     private TextInputLayout tilPrice, tilLink, tilNote;
     private TextInputEditText etPrice, etLink, etNote;
 
-    // Werte
-    private String title = "—";
-    private Double price = null;
-    private String link = "";
-    private String note = "";
     private boolean bought = false;
-
-    // gespeicherter Stand für Cancel
-    private Double savedPrice = null;
-    private String savedLink = "";
-    private String savedNote = "";
-    private boolean savedBought = false;
-
-    private boolean editMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,18 +45,19 @@ public class AddGiftActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        // Nur personId nötig!
         personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
-        giftId = getIntent().getStringExtra(EXTRA_GIFT_ID);
-        if (personId == null || giftId == null) { finish(); return; }
+        if (personId == null) { finish(); return; }
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        tvTitle = findViewById(R.id.tvTitle);
-        tvPrice = findViewById(R.id.tvPrice);
-        tvLink  = findViewById(R.id.tvLink);
-        tvNote  = findViewById(R.id.tvNote);
-        tvStatus= findViewById(R.id.tvStatus);
+        // Bind Views (dein XML hat diese IDs)
+        tvTitle  = findViewById(R.id.tvTitle);
+        tvPrice  = findViewById(R.id.tvPrice);
+        tvLink   = findViewById(R.id.tvLink);
+        tvNote   = findViewById(R.id.tvNote);
+        tvStatus = findViewById(R.id.tvStatus);
 
         bottomBar = findViewById(R.id.bottomBar);
 
@@ -84,51 +69,43 @@ public class AddGiftActivity extends AppCompatActivity {
         etLink  = findViewById(R.id.etLink);
         etNote  = findViewById(R.id.etNote);
 
+        // Titel Platzhalter (weil du kein Feld für Name hast)
+        // Wenn du ein Namensfeld willst: sag, dann bauen wir etTitle ein.
+        tvTitle.setText("Neues Geschenk");
+
+        // Für Add: direkt Edit-Mode an
+        enterEditMode();
+
         findViewById(R.id.btnUploadImage).setOnClickListener(v ->
                 Toast.makeText(this, "Upload kommt als nächstes 🙂", Toast.LENGTH_SHORT).show()
         );
 
         findViewById(R.id.btnMarkBought).setOnClickListener(v -> {
             bought = true;
-            render();
-            if (editMode) { /* bleibt */ }
+            renderStatus();
         });
 
         findViewById(R.id.btnMarkPlanned).setOnClickListener(v -> {
             bought = false;
-            render();
-            if (editMode) { /* bleibt */ }
+            renderStatus();
         });
 
-        findViewById(R.id.btnEdit).setOnClickListener(v -> enterEditMode());
+        // Bei Add brauchst du KEIN Bearbeiten/Löschen:
+        findViewById(R.id.btnEdit).setVisibility(View.GONE);
+        findViewById(R.id.btnDeleteGift).setVisibility(View.GONE);
 
-        findViewById(R.id.btnDeleteGift).setOnClickListener(v -> deleteGift());
+        // Bottom Buttons
+        findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
+        findViewById(R.id.btnSave).setOnClickListener(v -> saveNewGift());
 
-        findViewById(R.id.btnCancel).setOnClickListener(v -> cancelEdit());
-        findViewById(R.id.btnSave).setOnClickListener(v -> saveEdit());
-
-        loadGift();
+        renderStatus();
     }
 
-    private void render() {
-        tvTitle.setText(title);
-
-        if (price != null) tvPrice.setText("Preis: " + String.format("€ %.2f", price));
-        else tvPrice.setText("Preis: —");
-
-        tvLink.setText("Link: " + (!link.trim().isEmpty() ? link : "—"));
-        tvNote.setText("Notiz: " + (!note.trim().isEmpty() ? note : "—"));
+    private void renderStatus() {
         tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
     }
 
     private void enterEditMode() {
-        editMode = true;
-
-        // Werte in Felder
-        etPrice.setText(price != null ? String.valueOf(price) : "");
-        etLink.setText(link);
-        etNote.setText(note);
-
         // Anzeige aus, Eingabe an
         tvPrice.setVisibility(View.GONE);
         tvLink.setVisibility(View.GONE);
@@ -138,114 +115,48 @@ public class AddGiftActivity extends AppCompatActivity {
         tilLink.setVisibility(View.VISIBLE);
         tilNote.setVisibility(View.VISIBLE);
 
+        // BottomBar bei Add immer sichtbar
         bottomBar.setVisibility(View.VISIBLE);
-        Toast.makeText(this, "Bearbeiten aktiv", Toast.LENGTH_SHORT).show();
     }
 
-    private void cancelEdit() {
-        // zurück auf gespeicherte Werte
-        price = savedPrice;
-        link = savedLink;
-        note = savedNote;
-        bought = savedBought;
-
-        exitEditMode();
-        render();
-        Toast.makeText(this, "Änderungen verworfen", Toast.LENGTH_SHORT).show();
-    }
-
-    private void exitEditMode() {
-        editMode = false;
-
-        // Eingabe aus, Anzeige an
-        tilPrice.setVisibility(View.GONE);
-        tilLink.setVisibility(View.GONE);
-        tilNote.setVisibility(View.GONE);
-
-        tvPrice.setVisibility(View.VISIBLE);
-        tvLink.setVisibility(View.VISIBLE);
-        tvNote.setVisibility(View.VISIBLE);
-
-        bottomBar.setVisibility(View.GONE);
-    }
-
-    private void saveEdit() {
-        // Werte aus EditTexts lesen
+    private void saveNewGift() {
         String p = etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
         String l = etLink.getText() != null ? etLink.getText().toString().trim() : "";
         String n = etNote.getText() != null ? etNote.getText().toString().trim() : "";
 
-        Double pVal = null;
+        Double price = null;
         if (!p.isEmpty()) {
             try {
-                pVal = Double.parseDouble(p.replace(",", "."));
-            } catch (Exception ignored) {
+                price = Double.parseDouble(p.replace(",", "."));
+            } catch (Exception e) {
                 Toast.makeText(this, "Preis ungültig", Toast.LENGTH_SHORT).show();
                 return;
             }
         }
 
-        price = pVal;
-        link = l;
-        note = n;
+        // WICHTIG: Du hast in deinem Add-Layout kein Name-Feld.
+        // Wir speichern erstmal einen Default-Titel.
+        String title = "Neues Geschenk";
 
         Map<String, Object> data = new HashMap<>();
+        data.put("uid", uid);
+        data.put("personId", personId);
+
+        data.put("title", title);
         data.put("price", price);
-        data.put("link", link);
-        data.put("note", note);
+        data.put("link", l);
+        data.put("note", n);
         data.put("bought", bought);
+        data.put("createdAt", Timestamp.now());
 
-        FirestorePaths.gift(uid, personId, giftId)
-                .update(data)
-                .addOnSuccessListener(v -> {
-                    // saved = current
-                    savedPrice = price;
-                    savedLink = link;
-                    savedNote = note;
-                    savedBought = bought;
-
-                    exitEditMode();
-                    render();
-                    Toast.makeText(this, "Gespeichert ✅", Toast.LENGTH_SHORT).show();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
-    }
-
-    private void loadGift() {
-        FirestorePaths.gift(uid, personId, giftId)
-                .get()
-                .addOnSuccessListener(doc -> {
-                    if (!doc.exists()) { finish(); return; }
-
-                    title = doc.getString("title") != null ? doc.getString("title") : "—";
-                    price = doc.getDouble("price");
-                    link = doc.getString("link") != null ? doc.getString("link") : "";
-                    note = doc.getString("note") != null ? doc.getString("note") : "";
-                    Boolean b = doc.getBoolean("bought");
-                    bought = b != null && b;
-
-                    // saved für cancel
-                    savedPrice = price;
-                    savedLink = link;
-                    savedNote = note;
-                    savedBought = bought;
-
-                    render();
-                })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
-    }
-
-    private void deleteGift() {
-        FirestorePaths.gift(uid, personId, giftId)
-                .delete()
-                .addOnSuccessListener(v -> {
-                    Toast.makeText(this, "Gelöscht ✅", Toast.LENGTH_SHORT).show();
+        FirestorePaths.gifts(uid, personId)
+                .add(data)
+                .addOnSuccessListener(r -> {
+                    Toast.makeText(this, "Geschenk gespeichert ✅", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e ->
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+                        Toast.makeText(this, "Fehler: " + e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
     @Override
