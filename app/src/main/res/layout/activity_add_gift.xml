@@ -11,133 +11,267 @@
         android:layout_height="wrap_content"
         android:background="?attr/colorPrimary"
         app:titleTextColor="@android:color/white"
-        app:navigationIcon="@android:drawable/ic_media_previous" />
+        app:navigationIcon="@android:drawable/ic_media_previous"
+        app:title="Geschenkdetails" />
 
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
-        android:padding="16dp">
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:padding="16dp">
 
+            <!-- Upload Card -->
             <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardImage"
                 android:layout_width="match_parent"
-                android:layout_height="160dp"
-                app:cardCornerRadius="16dp"
-                app:cardUseCompatPadding="true">
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="14dp">
 
-                <FrameLayout
+                <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent">
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp"
+                    android:gravity="center">
 
                     <ImageView
-                        android:id="@+id/imgGift"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:scaleType="centerCrop"
-                        android:contentDescription="Gift image"
-                        android:visibility="gone" />
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@android:drawable/ic_menu_upload"
+                        android:alpha="0.65"/>
 
-                    <LinearLayout
-                        android:id="@+id/placeholderImage"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:gravity="center"
-                        android:orientation="vertical">
-
-                        <ImageView
-                            android:layout_width="48dp"
-                            android:layout_height="48dp"
-                            app:srcCompat="@android:drawable/ic_menu_camera"
-                            android:contentDescription="Upload" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Bild hinzufügen"
-                            android:layout_marginTop="8dp"/>
-                    </LinearLayout>
-
-                </FrameLayout>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUploadImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bild hochladen"
+                        android:layout_marginTop="10dp"
+                        app:cornerRadius="999dp"/>
+                </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <com.google.android.material.textfield.TextInputLayout
+            <!-- Details Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:hint="Geschenkname">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="14dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etGiftName"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"/>
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:hint="Preis"
-                android:layout_marginTop="12dp"
-                app:suffixText="€">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etPrice"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="numberDecimal"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <com.google.android.material.textfield.TextInputLayout
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Details"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:layout_marginBottom="8dp"/>
+
+                    <TextView
+                        android:id="@+id/tvTitle"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="—"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:layout_marginBottom="10dp"/>
+
+                    <!-- PREIS Anzeige -->
+                    <TextView
+                        android:id="@+id/tvPrice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Preis: —"
+                        android:paddingVertical="10dp"/>
+
+                    <!-- PREIS Edit (versteckt bis Bearbeiten) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilPrice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPrice"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Preis (z.B. 39.99)"
+                            android:inputType="numberDecimal"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:alpha="0.15"
+                        android:background="@android:color/black"/>
+
+                    <!-- LINK Anzeige -->
+                    <TextView
+                        android:id="@+id/tvLink"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Link: —"
+                        android:paddingVertical="10dp"/>
+
+                    <!-- LINK Edit -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLink"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLink"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Link"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="1dp"
+                        android:alpha="0.15"
+                        android:background="@android:color/black"/>
+
+                    <!-- NOTIZ Anzeige -->
+                    <TextView
+                        android:id="@+id/tvNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Notiz: —"
+                        android:paddingVertical="10dp"/>
+
+                    <!-- NOTIZ Edit -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNote"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Notiz"
+                            android:minLines="2"
+                            android:inputType="textMultiLine"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <TextView
+                        android:id="@+id/tvStatus"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Status: —"
+                        android:layout_marginTop="6dp"
+                        android:alpha="0.85"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Aktionen Card -->
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Link (optional)"
-                android:layout_marginTop="12dp">
+                app:cardCornerRadius="20dp"
+                app:cardElevation="2dp"
+                android:layout_marginBottom="160dp">
 
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etLink"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="textUri"/>
-            </com.google.android.material.textfield.TextInputLayout>
+                    android:orientation="vertical"
+                    android:padding="16dp">
 
-            <com.google.android.material.button.MaterialButtonToggleGroup
-                android:id="@+id/toggleStatus"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                app:singleSelection="true"
-                app:selectionRequired="true"
-                app:checkedButton="@id/btnPlanned">
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Aktionen"
+                        android:textStyle="bold"
+                        android:textSize="18sp"
+                        android:layout_marginBottom="10dp"/>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnPlanned"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Geplant"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMarkBought"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Als gekauft markieren"
+                        app:cornerRadius="14dp"/>
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnBought"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Gekauft"/>
-            </com.google.android.material.button.MaterialButtonToggleGroup>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnMarkPlanned"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Als geplant markieren"
+                        android:layout_marginTop="10dp"
+                        app:cornerRadius="14dp"
+                        style="@style/Widget.Material3.Button.TonalButton"/>
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnSaveGift"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
-                android:text="Speichern"
-                app:cornerRadius="20dp"/>
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnEdit"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Bearbeiten"
+                        android:layout_marginTop="10dp"
+                        app:cornerRadius="14dp"
+                        style="@style/Widget.Material3.Button.TonalButton"/>
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnDeleteGift"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Löschen"
+                        android:layout_marginTop="10dp"
+                        app:cornerRadius="14dp"
+                        style="@style/Widget.Material3.Button.OutlinedButton"/>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom Bar: nur im Edit-Mode sichtbar -->
+    <LinearLayout
+        android:id="@+id/bottomBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:padding="16dp"
+        android:orientation="horizontal"
+        android:background="@android:color/white"
+        android:elevation="8dp"
+        android:visibility="gone">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCancel"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Abbrechen"
+            style="@style/Widget.Material3.Button.OutlinedButton"
+            app:cornerRadius="999dp"/>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnSave"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginStart="12dp"
+            android:text="Speichern"
+            app:cornerRadius="999dp"/>
+    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
