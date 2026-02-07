@@ -9,17 +9,12 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
-import android.graphics.Color;
-import androidx.core.graphics.drawable.DrawableCompat;
-import android.graphics.drawable.Drawable;
-
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.firebase.auth.FirebaseAuth;
-
 import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
+import com.google.android.material.appbar.MaterialToolbar;
+import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -46,43 +41,17 @@ public class MainActivity extends AppCompatActivity {
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle("GeschenkPlaner");
-            getSupportActionBar().setDisplayHomeAsUpEnabled(
-                    getSupportFragmentManager().getBackStackEntryCount() > 0
-            );
+            // WICHTIG: In MainActivity NIE den Back-Pfeil anzeigen
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        toolbar.setOverflowIcon(getDrawable(R.drawable.ic_menu));
-
-        Drawable overflow = toolbar.getOverflowIcon();
-        if (overflow != null) {
-            overflow = DrawableCompat.wrap(overflow);
-            DrawableCompat.setTint(overflow, Color.WHITE);
-            toolbar.setOverflowIcon(overflow);
-        }
-
+        // WICHTIG: Navigation-Icon entfernen (damit kein Pfeil auftaucht)
+        toolbar.setNavigationIcon(null);
 
         // Start: Home
         if (savedInstanceState == null) {
-            replaceFragment(new HomeFragment(), false);
+            replaceFragment(new HomeFragment());
         }
-
-        // Back-Pfeil Klick
-        toolbar.setNavigationOnClickListener(v -> {
-            if (getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                getSupportFragmentManager().popBackStack();
-            }
-        });
-
-        // Backstack Listener -> Pfeil ein/aus
-        getSupportFragmentManager().addOnBackStackChangedListener(() -> {
-            boolean showBack = getSupportFragmentManager().getBackStackEntryCount() > 0;
-                if (getSupportActionBar() != null) {
-                    getSupportActionBar().setDisplayHomeAsUpEnabled(showBack);
-                }
-
-            // Pfeil wirklich anzeigen/ausblenden
-            toolbar.setNavigationIcon(showBack ? androidx.appcompat.R.drawable.abc_ic_ab_back_material : null);
-        });
     }
 
     @Override
@@ -96,36 +65,34 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.menu_home) {
-            replaceFragment(new HomeFragment(), false);
+            replaceFragment(new HomeFragment());
             return true;
 
         } else if (id == R.id.menu_add_person) {
-            replaceFragment(new AddPersonFragment(), true);
+            replaceFragment(new AddPersonFragment());
             return true;
 
         } else if (id == R.id.menu_calendar) {
-            replaceFragment(new CalendarFragment(), true);
+            replaceFragment(new CalendarFragment());
             return true;
 
         } else if (id == R.id.menu_settings) {
-            replaceFragment(new SettingsFragment(), true);
+            replaceFragment(new SettingsFragment());
             return true;
         }
 
         return super.onOptionsItemSelected(item);
     }
 
-    public void replaceFragment(Fragment fragment, boolean addToBackstack) {
-        var tx = getSupportFragmentManager()
+    private void replaceFragment(Fragment fragment) {
+        getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragmentContainer, fragment);
-
-        if (addToBackstack) tx.addToBackStack(null);
-
-        tx.commit();
+                .replace(R.id.fragmentContainer, fragment)
+                // WICHTIG: NICHT addToBackStack -> dann gibt’s keinen Up-Pfeil und kein “PopBackStack”
+                .commit();
     }
 
     public void navigateToAddPerson() {
-        replaceFragment(new AddPersonFragment(), true);
+        replaceFragment(new AddPersonFragment());
     }
 }
