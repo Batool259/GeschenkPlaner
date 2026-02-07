@@ -360,15 +360,20 @@ public class HomeFragment extends Fragment {
     }
 
     private static class PersonVH extends RecyclerView.ViewHolder {
-        private final AppCompatTextView tvName;
-        private final AppCompatTextView tvInfo;
+
+        private final TextView tvName;
+        private final TextView tvInfo;
         private final TextView tvInitial;
         private final ImageButton btnMore;
+
+
+
 
         PersonVH(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvInfo = itemView.findViewById(R.id.tvInfo);
+
             tvInitial = itemView.findViewById(R.id.tvInitial);
             btnMore = itemView.findViewById(R.id.btnMore);
         }

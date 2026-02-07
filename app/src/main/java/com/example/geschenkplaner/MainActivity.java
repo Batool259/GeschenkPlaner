@@ -9,6 +9,10 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+import android.graphics.Color;
+import androidx.core.graphics.drawable.DrawableCompat;
+import android.graphics.drawable.Drawable;
+
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -47,6 +51,16 @@ public class MainActivity extends AppCompatActivity {
             );
         }
 
+        toolbar.setOverflowIcon(getDrawable(R.drawable.ic_menu));
+
+        Drawable overflow = toolbar.getOverflowIcon();
+        if (overflow != null) {
+            overflow = DrawableCompat.wrap(overflow);
+            DrawableCompat.setTint(overflow, Color.WHITE);
+            toolbar.setOverflowIcon(overflow);
+        }
+
+
         // Start: Home
         if (savedInstanceState == null) {
             replaceFragment(new HomeFragment(), false);
@@ -61,10 +75,13 @@ public class MainActivity extends AppCompatActivity {
 
         // Backstack Listener -> Pfeil ein/aus
         getSupportFragmentManager().addOnBackStackChangedListener(() -> {
-            if (getSupportActionBar() != null) {
-                boolean showBack = getSupportFragmentManager().getBackStackEntryCount() > 0;
-                getSupportActionBar().setDisplayHomeAsUpEnabled(showBack);
-            }
+            boolean showBack = getSupportFragmentManager().getBackStackEntryCount() > 0;
+                if (getSupportActionBar() != null) {
+                    getSupportActionBar().setDisplayHomeAsUpEnabled(showBack);
+                }
+
+            // Pfeil wirklich anzeigen/ausblenden
+            toolbar.setNavigationIcon(showBack ? androidx.appcompat.R.drawable.abc_ic_ab_back_material : null);
         });
     }
 
