@@ -2,18 +2,18 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
         android:id="@+id/nav_home"
-        android:title="Home"
+        android:title="🏠 Home"
         android:icon="@android:drawable/ic_menu_view"/>
     <item
         android:id="@+id/nav_add_persons"
-        android:title="Person hinzufügen"
+        android:title="➕ Person hinzufügen"
         android:icon="@android:drawable/ic_menu_add"/>
     <item
         android:id="@+id/nav_calendar"
-        android:title="Kalender"
+        android:title="🗓️ Kalender"
         android:icon="@android:drawable/ic_menu_my_calendar"/>
     <item
         android:id="@+id/nav_settings"
-        android:title="Einstellungen"
+        android:title="⚙️ Einstellungen"
         android:icon="@android:drawable/ic_menu_manage"/>
 </menu>
