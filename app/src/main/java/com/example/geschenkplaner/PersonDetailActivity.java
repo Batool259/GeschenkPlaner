@@ -42,8 +42,9 @@ public class PersonDetailActivity extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        // Up/Back aktivieren (Standard-Pattern mit Toolbar als ActionBar) :contentReference[oaicite:1]{index=1}
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("Personendetails");
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
@@ -201,6 +202,7 @@ public class PersonDetailActivity extends AppCompatActivity {
             holder.itemView.setOnClickListener(v -> {
                 Intent i = new Intent(PersonDetailActivity.this, GiftDetailActivity.class);
                 i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
+                i.putExtra(GiftDetailActivity.EXTRA_PERSON_ID, personId);
                 startActivity(i);
             });
         }
