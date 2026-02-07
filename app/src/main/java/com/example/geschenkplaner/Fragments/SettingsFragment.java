@@ -16,10 +16,17 @@ import android.view.ViewGroup;
 
 import com.example.geschenkplaner.LoginActivity;
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-public class SettingsFragment extends Fragment {
+public class SettingsFragment extends Fragment implements ToolbarConfig {
+
+    @Override
+    public String getToolbarTitle() {
+        return "Einstellungen";
+    }
+
 
     @Nullable
     @Override

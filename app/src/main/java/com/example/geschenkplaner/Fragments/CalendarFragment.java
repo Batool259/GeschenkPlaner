@@ -18,6 +18,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,7 +32,13 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-public class CalendarFragment extends Fragment {
+public class CalendarFragment extends Fragment implements ToolbarConfig {
+
+    @Override
+    public String getToolbarTitle() {
+        return "Kalender";
+    }
+
 
     private CalendarView calendarView;
     private TextView tvSelectedDate;

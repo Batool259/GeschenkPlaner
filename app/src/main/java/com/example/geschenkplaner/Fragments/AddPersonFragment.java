@@ -14,6 +14,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -21,7 +22,13 @@ import com.google.firebase.firestore.FirebaseFirestore;
 import java.util.HashMap;
 import java.util.Map;
 
-public class AddPersonFragment extends Fragment {
+public class AddPersonFragment extends Fragment implements ToolbarConfig {
+
+    @Override
+        public String getToolbarTitle() {
+            return "Person hinzufügen";
+        }
+
 
     private EditText etName, etBirthday, etNote;
     private FirebaseFirestore db;

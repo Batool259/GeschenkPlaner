@@ -13,6 +13,7 @@ import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
+import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -39,18 +40,20 @@ public class MainActivity extends AppCompatActivity {
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        // In der MainActivity NIE Up/Back-Pfeil anzeigen
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setTitle("GeschenkPlaner");
-            // WICHTIG: In MainActivity NIE den Back-Pfeil anzeigen
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
-
-        // WICHTIG: Navigation-Icon entfernen (damit kein Pfeil auftaucht)
         toolbar.setNavigationIcon(null);
+
+        // Wenn sich der sichtbare Fragment ändert, Toolbar-Titel aktualisieren
+        getSupportFragmentManager().addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
 
         // Start: Home
         if (savedInstanceState == null) {
             replaceFragment(new HomeFragment());
+        } else {
+            applyToolbarFromCurrentFragment();
         }
     }
 
@@ -67,15 +70,12 @@ public class MainActivity extends AppCompatActivity {
         if (id == R.id.menu_home) {
             replaceFragment(new HomeFragment());
             return true;
-
         } else if (id == R.id.menu_add_person) {
             replaceFragment(new AddPersonFragment());
             return true;
-
         } else if (id == R.id.menu_calendar) {
             replaceFragment(new CalendarFragment());
             return true;
-
         } else if (id == R.id.menu_settings) {
             replaceFragment(new SettingsFragment());
             return true;
@@ -88,8 +88,31 @@ public class MainActivity extends AppCompatActivity {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
-                // WICHTIG: NICHT addToBackStack -> dann gibt’s keinen Up-Pfeil und kein “PopBackStack”
+                // Kein Backstack -> kein Pfeil,ückweg, bleibt “Top-Level”
+                .runOnCommit(this::applyToolbarFromCurrentFragment)
                 .commit();
+    }
+
+    private void applyToolbarFromCurrentFragment() {
+        Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+
+        String title = "GeschenkPlaner";
+        if (f instanceof ToolbarConfig) {
+            title = ((ToolbarConfig) f).getToolbarTitle();
+        }
+
+        // Toolbar-Titel setzen (MaterialToolbar/Toolbar unterstützt setTitle)
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setTitle(title);
+        } else {
+            toolbar.setTitle(title);
+        }
+
+        // Sicherstellen: in MainActivity nie Pfeil anzeigen
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+        }
+        toolbar.setNavigationIcon(null);
     }
 
     public void navigateToAddPerson() {

@@ -23,6 +23,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.geschenkplaner.MainActivity;
 import com.example.geschenkplaner.PersonDetailActivity;
 import com.example.geschenkplaner.R;
+import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
@@ -37,7 +38,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HomeFragment extends Fragment {
+public class HomeFragment extends Fragment implements ToolbarConfig {
+
+    @Override
+    public String getToolbarTitle() {
+        return "GeschenkPlaner";
+    }
 
     private FirebaseAuth auth;
     private ListenerRegistration personsListener;
