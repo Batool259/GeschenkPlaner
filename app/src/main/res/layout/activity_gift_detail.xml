@@ -14,9 +14,7 @@
         app:navigationIcon="@android:drawable/ic_media_previous"
         app:title="Geschenkdetails" />
 
-    <!-- Inhalt scrollt -->
     <androidx.core.widget.NestedScrollView
-        android:id="@+id/scroll"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize"
@@ -40,29 +38,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:padding="16dp">
+                    android:padding="16dp"
+                    android:gravity="center">
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="160dp"
-                        android:gravity="center"
-                        android:orientation="vertical">
+                    <ImageView
+                        android:layout_width="72dp"
+                        android:layout_height="72dp"
+                        android:src="@android:drawable/ic_menu_upload"
+                        android:alpha="0.65"/>
 
-                        <ImageView
-                            android:layout_width="72dp"
-                            android:layout_height="72dp"
-                            android:src="@android:drawable/ic_menu_upload"
-                            android:alpha="0.65"/>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/btnUploadImage"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Bild hochladen"
-                            android:layout_marginTop="10dp"
-                            app:cornerRadius="999dp"/>
-                    </LinearLayout>
-
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btnUploadImage"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Bild hochladen"
+                        android:layout_marginTop="10dp"
+                        app:cornerRadius="999dp"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -97,27 +88,29 @@
                         android:textSize="20sp"
                         android:layout_marginBottom="10dp"/>
 
-                    <!-- Preis -->
-                    <LinearLayout
-                        android:id="@+id/rowPrice"
+                    <!-- PREIS Anzeige -->
+                    <TextView
+                        android:id="@+id/tvPrice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingVertical="10dp">
+                        android:text="Preis: —"
+                        android:paddingVertical="10dp"/>
 
-                        <TextView
-                            android:id="@+id/tvPrice"
-                            android:layout_width="0dp"
+                    <!-- PREIS Edit (versteckt bis Bearbeiten) -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilPrice"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etPrice"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Preis: —"/>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@android:drawable/ic_media_next"/>
-                    </LinearLayout>
+                            android:hint="Preis (z.B. 39.99)"
+                            android:inputType="numberDecimal"/>
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <View
                         android:layout_width="match_parent"
@@ -125,27 +118,28 @@
                         android:alpha="0.15"
                         android:background="@android:color/black"/>
 
-                    <!-- Link -->
-                    <LinearLayout
-                        android:id="@+id/rowLink"
+                    <!-- LINK Anzeige -->
+                    <TextView
+                        android:id="@+id/tvLink"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingVertical="10dp">
+                        android:text="Link: —"
+                        android:paddingVertical="10dp"/>
 
-                        <TextView
-                            android:id="@+id/tvLink"
-                            android:layout_width="0dp"
+                    <!-- LINK Edit -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilLink"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etLink"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Link: —"/>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@android:drawable/ic_media_next"/>
-                    </LinearLayout>
+                            android:hint="Link"/>
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <View
                         android:layout_width="match_parent"
@@ -153,27 +147,30 @@
                         android:alpha="0.15"
                         android:background="@android:color/black"/>
 
-                    <!-- Notiz -->
-                    <LinearLayout
-                        android:id="@+id/rowNote"
+                    <!-- NOTIZ Anzeige -->
+                    <TextView
+                        android:id="@+id/tvNote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:paddingVertical="10dp">
+                        android:text="Notiz: —"
+                        android:paddingVertical="10dp"/>
 
-                        <TextView
-                            android:id="@+id/tvNote"
-                            android:layout_width="0dp"
+                    <!-- NOTIZ Edit -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilNote"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:visibility="gone"
+                        android:layout_marginBottom="8dp">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etNote"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Notiz: —"/>
-
-                        <ImageView
-                            android:layout_width="18dp"
-                            android:layout_height="18dp"
-                            android:src="@android:drawable/ic_media_next"/>
-                    </LinearLayout>
+                            android:hint="Notiz"
+                            android:minLines="2"
+                            android:inputType="textMultiLine"/>
+                    </com.google.android.material.textfield.TextInputLayout>
 
                     <TextView
                         android:id="@+id/tvStatus"
@@ -246,7 +243,7 @@
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Bottom Bar (fix) -->
+    <!-- Bottom Bar: nur im Edit-Mode sichtbar -->
     <LinearLayout
         android:id="@+id/bottomBar"
         android:layout_width="match_parent"
@@ -255,7 +252,8 @@
         android:padding="16dp"
         android:orientation="horizontal"
         android:background="@android:color/white"
-        android:elevation="8dp">
+        android:elevation="8dp"
+        android:visibility="gone">
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btnCancel"

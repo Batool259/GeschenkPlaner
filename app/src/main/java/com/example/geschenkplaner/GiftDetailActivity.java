@@ -1,10 +1,8 @@
 package com.example.geschenkplaner;
 
 import android.os.Bundle;
-import android.text.InputType;
 import android.view.MenuItem;
-import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,9 +10,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -24,19 +22,32 @@ public class GiftDetailActivity extends AppCompatActivity {
     public static final String EXTRA_PERSON_ID = "personId";
     public static final String EXTRA_GIFT_ID = "giftId";
 
-    private FirebaseFirestore db;
     private String uid;
     private String personId;
     private String giftId;
 
+    // Anzeige
     private TextView tvTitle, tvPrice, tvLink, tvNote, tvStatus;
 
-    // Aktuelle Werte
-    private String currentTitle = "—";
-    private Double currentPrice = null;
-    private String currentLink = "";
-    private String currentNote = "";
-    private boolean currentBought = false;
+    // Edit UI
+    private View bottomBar;
+    private TextInputLayout tilPrice, tilLink, tilNote;
+    private TextInputEditText etPrice, etLink, etNote;
+
+    // Werte
+    private String title = "—";
+    private Double price = null;
+    private String link = "";
+    private String note = "";
+    private boolean bought = false;
+
+    // gespeicherter Stand für Cancel
+    private Double savedPrice = null;
+    private String savedLink = "";
+    private String savedNote = "";
+    private boolean savedBought = false;
+
+    private boolean editMode = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,7 +67,6 @@ public class GiftDetailActivity extends AppCompatActivity {
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
-        db = FirebaseFirestore.getInstance();
 
         tvTitle = findViewById(R.id.tvTitle);
         tvPrice = findViewById(R.id.tvPrice);
@@ -64,31 +74,142 @@ public class GiftDetailActivity extends AppCompatActivity {
         tvNote  = findViewById(R.id.tvNote);
         tvStatus= findViewById(R.id.tvStatus);
 
-        // Aktionen
-        findViewById(R.id.btnMarkBought).setOnClickListener(v -> {
-            currentBought = true;
-            renderAll();
-        });
+        bottomBar = findViewById(R.id.bottomBar);
 
-        findViewById(R.id.btnMarkPlanned).setOnClickListener(v -> {
-            currentBought = false;
-            renderAll();
-        });
+        tilPrice = findViewById(R.id.tilPrice);
+        tilLink  = findViewById(R.id.tilLink);
+        tilNote  = findViewById(R.id.tilNote);
 
-        findViewById(R.id.btnEdit).setOnClickListener(v -> openEditDialog());
+        etPrice = findViewById(R.id.etPrice);
+        etLink  = findViewById(R.id.etLink);
+        etNote  = findViewById(R.id.etNote);
 
-        findViewById(R.id.btnDeleteGift).setOnClickListener(v -> deleteGift());
-
-        // Bottom Buttons
-        findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
-        findViewById(R.id.btnSave).setOnClickListener(v -> saveAll());
-
-        // Upload vorerst
         findViewById(R.id.btnUploadImage).setOnClickListener(v ->
                 Toast.makeText(this, "Upload kommt als nächstes 🙂", Toast.LENGTH_SHORT).show()
         );
 
+        findViewById(R.id.btnMarkBought).setOnClickListener(v -> {
+            bought = true;
+            render();
+            if (editMode) { /* bleibt */ }
+        });
+
+        findViewById(R.id.btnMarkPlanned).setOnClickListener(v -> {
+            bought = false;
+            render();
+            if (editMode) { /* bleibt */ }
+        });
+
+        findViewById(R.id.btnEdit).setOnClickListener(v -> enterEditMode());
+
+        findViewById(R.id.btnDeleteGift).setOnClickListener(v -> deleteGift());
+
+        findViewById(R.id.btnCancel).setOnClickListener(v -> cancelEdit());
+        findViewById(R.id.btnSave).setOnClickListener(v -> saveEdit());
+
         loadGift();
+    }
+
+    private void render() {
+        tvTitle.setText(title);
+
+        if (price != null) tvPrice.setText("Preis: " + String.format("€ %.2f", price));
+        else tvPrice.setText("Preis: —");
+
+        tvLink.setText("Link: " + (!link.trim().isEmpty() ? link : "—"));
+        tvNote.setText("Notiz: " + (!note.trim().isEmpty() ? note : "—"));
+        tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
+    }
+
+    private void enterEditMode() {
+        editMode = true;
+
+        // Werte in Felder
+        etPrice.setText(price != null ? String.valueOf(price) : "");
+        etLink.setText(link);
+        etNote.setText(note);
+
+        // Anzeige aus, Eingabe an
+        tvPrice.setVisibility(View.GONE);
+        tvLink.setVisibility(View.GONE);
+        tvNote.setVisibility(View.GONE);
+
+        tilPrice.setVisibility(View.VISIBLE);
+        tilLink.setVisibility(View.VISIBLE);
+        tilNote.setVisibility(View.VISIBLE);
+
+        bottomBar.setVisibility(View.VISIBLE);
+        Toast.makeText(this, "Bearbeiten aktiv", Toast.LENGTH_SHORT).show();
+    }
+
+    private void cancelEdit() {
+        // zurück auf gespeicherte Werte
+        price = savedPrice;
+        link = savedLink;
+        note = savedNote;
+        bought = savedBought;
+
+        exitEditMode();
+        render();
+        Toast.makeText(this, "Änderungen verworfen", Toast.LENGTH_SHORT).show();
+    }
+
+    private void exitEditMode() {
+        editMode = false;
+
+        // Eingabe aus, Anzeige an
+        tilPrice.setVisibility(View.GONE);
+        tilLink.setVisibility(View.GONE);
+        tilNote.setVisibility(View.GONE);
+
+        tvPrice.setVisibility(View.VISIBLE);
+        tvLink.setVisibility(View.VISIBLE);
+        tvNote.setVisibility(View.VISIBLE);
+
+        bottomBar.setVisibility(View.GONE);
+    }
+
+    private void saveEdit() {
+        // Werte aus EditTexts lesen
+        String p = etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
+        String l = etLink.getText() != null ? etLink.getText().toString().trim() : "";
+        String n = etNote.getText() != null ? etNote.getText().toString().trim() : "";
+
+        Double pVal = null;
+        if (!p.isEmpty()) {
+            try {
+                pVal = Double.parseDouble(p.replace(",", "."));
+            } catch (Exception ignored) {
+                Toast.makeText(this, "Preis ungültig", Toast.LENGTH_SHORT).show();
+                return;
+            }
+        }
+
+        price = pVal;
+        link = l;
+        note = n;
+
+        Map<String, Object> data = new HashMap<>();
+        data.put("price", price);
+        data.put("link", link);
+        data.put("note", note);
+        data.put("bought", bought);
+
+        FirestorePaths.gift(uid, personId, giftId)
+                .update(data)
+                .addOnSuccessListener(v -> {
+                    // saved = current
+                    savedPrice = price;
+                    savedLink = link;
+                    savedNote = note;
+                    savedBought = bought;
+
+                    exitEditMode();
+                    render();
+                    Toast.makeText(this, "Gespeichert ✅", Toast.LENGTH_SHORT).show();
+                })
+                .addOnFailureListener(e ->
+                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
     private void loadGift() {
@@ -97,101 +218,21 @@ public class GiftDetailActivity extends AppCompatActivity {
                 .addOnSuccessListener(doc -> {
                     if (!doc.exists()) { finish(); return; }
 
-                    String title = doc.getString("title");
-                    Double price = doc.getDouble("price");
-                    String link  = doc.getString("link");
-                    String note  = doc.getString("note");
-                    Boolean bought = doc.getBoolean("bought");
+                    title = doc.getString("title") != null ? doc.getString("title") : "—";
+                    price = doc.getDouble("price");
+                    link = doc.getString("link") != null ? doc.getString("link") : "";
+                    note = doc.getString("note") != null ? doc.getString("note") : "";
+                    Boolean b = doc.getBoolean("bought");
+                    bought = b != null && b;
 
-                    currentTitle = title != null ? title : "—";
-                    currentPrice = price;
-                    currentLink = (link != null) ? link : "";
-                    currentNote = (note != null) ? note : "";
-                    currentBought = bought != null && bought;
+                    // saved für cancel
+                    savedPrice = price;
+                    savedLink = link;
+                    savedNote = note;
+                    savedBought = bought;
 
-                    renderAll();
+                    render();
                 })
-                .addOnFailureListener(e ->
-                        Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
-    }
-
-    private void renderAll() {
-        tvTitle.setText(currentTitle);
-
-        if (currentPrice != null) {
-            tvPrice.setText("Preis: " + String.format("€ %.2f", currentPrice));
-        } else {
-            tvPrice.setText("Preis: —");
-        }
-
-        tvLink.setText("Link: " + (!currentLink.trim().isEmpty() ? currentLink : "—"));
-        tvNote.setText("Notiz: " + (!currentNote.trim().isEmpty() ? currentNote : "—"));
-        tvStatus.setText("Status: " + (currentBought ? "Gekauft ✅" : "Geplant"));
-    }
-
-    private void openEditDialog() {
-        LinearLayout box = new LinearLayout(this);
-        box.setOrientation(LinearLayout.VERTICAL);
-        int pad = (int) (16 * getResources().getDisplayMetrics().density);
-        box.setPadding(pad, pad, pad, pad);
-
-        EditText etPrice = new EditText(this);
-        etPrice.setHint("Preis (z.B. 14.99)");
-        etPrice.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_FLAG_DECIMAL);
-        etPrice.setText(currentPrice != null ? String.valueOf(currentPrice) : "");
-
-        EditText etLink = new EditText(this);
-        etLink.setHint("Link");
-        etLink.setInputType(InputType.TYPE_TEXT_VARIATION_URI);
-        etLink.setText(currentLink);
-
-        EditText etNote = new EditText(this);
-        etNote.setHint("Notiz");
-        etNote.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        etNote.setMinLines(2);
-        etNote.setText(currentNote);
-
-        box.addView(etPrice);
-        box.addView(etLink);
-        box.addView(etNote);
-
-        new MaterialAlertDialogBuilder(this)
-                .setTitle("Geschenk bearbeiten")
-                .setView(box)
-                .setNegativeButton("Abbrechen", (d, w) -> d.dismiss())
-                .setPositiveButton("Übernehmen", (d, w) -> {
-                    String p = etPrice.getText().toString().trim();
-                    String link = etLink.getText().toString().trim();
-                    String note = etNote.getText().toString().trim();
-
-                    Double priceVal = null;
-                    if (!p.isEmpty()) {
-                        try {
-                            priceVal = Double.parseDouble(p.replace(",", "."));
-                        } catch (Exception ignored) {
-                            Toast.makeText(this, "Preis ist ungültig", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-
-                    currentPrice = priceVal;
-                    currentLink = link;
-                    currentNote = note;
-                    renderAll();
-                })
-                .show();
-    }
-
-    private void saveAll() {
-        Map<String, Object> data = new HashMap<>();
-        data.put("bought", currentBought);
-        data.put("price", currentPrice);
-        data.put("link", currentLink);
-        data.put("note", currentNote);
-
-        FirestorePaths.gift(uid, personId, giftId)
-                .update(data)
-                .addOnSuccessListener(v ->
-                        Toast.makeText(this, "Gespeichert ✅", Toast.LENGTH_SHORT).show())
                 .addOnFailureListener(e ->
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
     }
