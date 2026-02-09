@@ -24,6 +24,7 @@ import java.util.Map;
 
 public class AddPersonFragment extends Fragment implements ToolbarConfig {
 
+
     @Override
         public String getToolbarTitle() {
             return "Person hinzufügen";
