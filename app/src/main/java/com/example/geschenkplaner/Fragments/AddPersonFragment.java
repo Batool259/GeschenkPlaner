@@ -93,7 +93,7 @@ public class AddPersonFragment extends Fragment implements ToolbarConfig {
                 .collection("persons")
                 .add(data)
                 .addOnSuccessListener(r -> {
-                    Toast.makeText(getContext(), "Person gespeichert ✅", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getContext(), "Person gespeichert ", Toast.LENGTH_SHORT).show();
                     if (requireActivity().getSupportFragmentManager().getBackStackEntryCount() > 0) {
                         requireActivity().getSupportFragmentManager().popBackStack();
                     }
