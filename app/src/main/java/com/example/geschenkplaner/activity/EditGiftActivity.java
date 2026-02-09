@@ -213,7 +213,7 @@ public class EditGiftActivity extends AppCompatActivity {
             return;
         }
 
-        ivGiftImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        ivGiftImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
         ivGiftImage.setAlpha(1f);
 
         Glide.with(this).load(uriOrUrl).into(ivGiftImage);

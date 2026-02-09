@@ -167,13 +167,13 @@ public class AddGiftActivity extends AppCompatActivity {
 
     private void loadImagePreview() {
         if (selectedImageUri != null) {
-            Glide.with(this).load(selectedImageUri).centerCrop().into(ivGiftImage);
+            Glide.with(this).load(selectedImageUri).fitCenter().into(ivGiftImage);
             ivGiftImage.setAlpha(255);
             return;
         }
 
         if (imageUrl != null && !imageUrl.trim().isEmpty()) {
-            Glide.with(this).load(imageUrl.trim()).centerCrop().into(ivGiftImage);
+            Glide.with(this).load(imageUrl.trim()).fitCenter().into(ivGiftImage);
             ivGiftImage.setAlpha(255);
             return;
         }
