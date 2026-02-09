@@ -14,18 +14,14 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.AppCompatTextView;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.geschenkplaner.MainActivity;
-import com.example.geschenkplaner.PersonDetailActivity;
+import com.example.geschenkplaner.activity.PersonDetailActivity;
 import com.example.geschenkplaner.R;
-import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.example.geschenkplaner.data.FirestorePaths;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
