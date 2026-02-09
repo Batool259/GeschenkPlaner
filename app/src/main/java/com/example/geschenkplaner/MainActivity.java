@@ -36,20 +36,24 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        // Toolbar
+        // Toolbar setzen
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // In der MainActivity NIE Up/Back-Pfeil anzeigen
+        // Menü-Icon (Burger) IMMER anzeigen
+        toolbar.setNavigationIcon(null);
+        toolbar.setNavigationOnClickListener(null);
+
+        // Kein Back-Pfeil in MainActivity
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
-        toolbar.setNavigationIcon(null);
 
-        // Wenn sich der sichtbare Fragment ändert, Toolbar-Titel aktualisieren
-        getSupportFragmentManager().addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
+        // Toolbar bei Fragmentwechsel aktualisieren
+        getSupportFragmentManager()
+                .addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
 
-        // Start: Home
+        // Startfragment
         if (savedInstanceState == null) {
             replaceFragment(new HomeFragment());
         } else {
@@ -66,6 +70,11 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
+
+        if (id == R.id.action_menu) {
+            // Burger rechts wurde geklickt -> Submenu geht automatisch auf
+            return true;
+        }
 
         if (id == R.id.menu_home) {
             replaceFragment(new HomeFragment());
@@ -84,35 +93,32 @@ public class MainActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+
+
     private void replaceFragment(Fragment fragment) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
-                // Kein Backstack -> kein Pfeil,ückweg, bleibt “Top-Level”
                 .runOnCommit(this::applyToolbarFromCurrentFragment)
                 .commit();
     }
 
     private void applyToolbarFromCurrentFragment() {
-        Fragment f = getSupportFragmentManager().findFragmentById(R.id.fragmentContainer);
+        Fragment f = getSupportFragmentManager()
+                .findFragmentById(R.id.fragmentContainer);
 
         String title = "GeschenkPlaner";
         if (f instanceof ToolbarConfig) {
             title = ((ToolbarConfig) f).getToolbarTitle();
         }
 
-        // Toolbar-Titel setzen (MaterialToolbar/Toolbar unterstützt setTitle)
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         } else {
             toolbar.setTitle(title);
         }
 
-        // Sicherstellen: in MainActivity nie Pfeil anzeigen
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
-        }
-        toolbar.setNavigationIcon(null);
     }
 
     public void navigateToAddPerson() {

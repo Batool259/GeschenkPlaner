@@ -1,20 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<menu xmlns:android="http://schemas.android.com/apk/res/android">
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
+    <!-- Burger-Icon rechts -->
     <item
-        android:id="@+id/menu_home"
-        android:title="🏠 Home" />
+        android:id="@+id/action_menu"
+        android:icon="@drawable/ic_menu"
+        android:title="Menü"
+        app:showAsAction="always">
 
-    <item
-        android:id="@+id/menu_add_person"
-        android:title="➕ Person hinzufügen" />
+        <!-- Inhalte des Menüs -->
+        <menu>
+            <item
+                android:id="@+id/menu_home"
+                android:title="🏠 Home" />
 
-    <item
-        android:id="@+id/menu_calendar"
-        android:title="🗓️ Kalender" />
+            <item
+                android:id="@+id/menu_add_person"
+                android:title="➕ Person hinzufügen" />
 
-    <item
-        android:id="@+id/menu_settings"
-        android:title="️⚙️ Einstellungen" />
+            <item
+                android:id="@+id/menu_calendar"
+                android:title="📅 Kalender" />
+
+            <item
+                android:id="@+id/menu_settings"
+                android:title="⚙️ Einstellungen" />
+        </menu>
+
+    </item>
 
 </menu>
