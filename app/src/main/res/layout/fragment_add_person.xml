@@ -11,7 +11,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Wem möchtest du eine Freude bereiten? "
-        android:textSize="14sp"
+        android:textSize="20sp"
         android:alpha="0.75"
         android:layout_marginTop="14dp"
         app:layout_constraintTop_toTopOf="parent"
