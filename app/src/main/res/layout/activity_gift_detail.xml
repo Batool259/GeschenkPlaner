@@ -209,7 +209,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Als gekauft markieren"
-                        app:cornerRadius="14dp"/>
+                        app:cornerRadius="14dp"
+                        style="@style/Widget.Material3.Button.TonalButton"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnMarkPlanned"
@@ -227,7 +228,7 @@
                         android:text="Bearbeiten"
                         android:layout_marginTop="10dp"
                         app:cornerRadius="14dp"
-                        style="@style/Widget.Material3.Button.TonalButton"/>
+                        style="@style/Widget.Material3.Button.OutlinedButton"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnDeleteGift"
