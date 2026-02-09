@@ -5,9 +5,7 @@ plugins {
 
 android {
     namespace = "com.example.geschenkplaner"
-    compileSdk {
-        version = release(36)
-    }
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.geschenkplaner"
@@ -15,7 +13,6 @@ android {
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
-
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -41,19 +38,24 @@ dependencies {
     implementation(libs.activity)
     implementation(libs.constraintlayout)
 
-    // Glide (ohne kapt)
     implementation("com.github.bumptech.glide:glide:4.16.0")
+
+    implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
+    implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-firestore")
+
+    implementation("com.github.prolificinteractive:material-calendarview:2.0.1") {
+        exclude(group = "com.android.support")
+    }
+
+
+    implementation("com.jakewharton.threetenabp:threetenabp:1.4.8")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.ext.junit)
     androidTestImplementation(libs.espresso.core)
+}
 
-    // Firebase BoM
-    implementation(platform("com.google.firebase:firebase-bom:34.8.0"))
-
-    // Firebase Auth
-    implementation("com.google.firebase:firebase-auth")
-
-    // Firestore
-    implementation("com.google.firebase:firebase-firestore")
+configurations.all {
+    exclude(group = "com.android.support")
 }

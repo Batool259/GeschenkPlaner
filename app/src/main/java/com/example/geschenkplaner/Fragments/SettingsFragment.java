@@ -14,9 +14,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.example.geschenkplaner.LoginActivity;
+import com.example.geschenkplaner.activity.LoginActivity;
 import com.example.geschenkplaner.R;
-import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
