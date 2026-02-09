@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <application
+        android:name=".MyApp"
         android:allowBackup="true"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
@@ -13,16 +14,16 @@
         android:theme="@style/Theme.GeschenkPlaner">
 
         <activity android:name=".MainActivity" android:exported="false" />
-        <activity android:name=".LoginActivity" android:exported="false" />
-        <activity android:name=".RegisterActivity" android:exported="false" />
+        <activity android:name=".activity.LoginActivity" android:exported="false" />
+        <activity android:name=".activity.RegisterActivity" android:exported="false" />
 
-        <activity android:name=".PersonDetailActivity" android:exported="false" />
-        <activity android:name=".AddGiftActivity" android:exported="false" />
-        <activity android:name=".GiftDetailActivity" android:exported="false" />
-        <activity android:name=".EditGiftActivity" android:exported="false" />
+        <activity android:name=".activity.PersonDetailActivity" android:exported="false" />
+        <activity android:name=".activity.AddGiftActivity" android:exported="false" />
+        <activity android:name=".activity.GiftDetailActivity" android:exported="false" />
+        <activity android:name=".activity.EditGiftActivity" android:exported="false" />
 
         <activity
-            android:name=".StartActivity"
+            android:name=".activity.StartActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
