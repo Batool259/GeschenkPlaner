@@ -2,6 +2,7 @@ package com.example.geschenkplaner.activity;
 import com.example.geschenkplaner.MainActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.InputType;
 import android.view.Menu;
@@ -27,7 +28,6 @@ public class GiftDetailActivity extends AppCompatActivity {
 
     private static final int REQ_EDIT_GIFT = 1001;
 
-    // Menü-Navigation zu MainActivity-Fragmenten
     private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
     private static final String FRAG_HOME = "home";
     private static final String FRAG_ADD_PERSON = "add_person";
@@ -43,7 +43,7 @@ public class GiftDetailActivity extends AppCompatActivity {
 
     private String title = "";
     private Double price = null;
-    private String link = "";
+    private String link = "";     // Website-Link
     private String note = "";
     private boolean bought = false;
     private String imageUrl = "";
@@ -86,7 +86,11 @@ public class GiftDetailActivity extends AppCompatActivity {
 
         makeReadOnly(etName);
         makeReadOnly(etPrice);
-        makeReadOnly(etLink);
+
+        // Link: NICHT komplett deaktivieren, weil er klickbar sein soll
+        makeReadOnlyButClickable(etLink);
+        etLink.setOnClickListener(v -> openWebsiteLink(link));
+
         makeReadOnly(etNote);
         makeReadOnly(etStatus);
 
@@ -107,6 +111,16 @@ public class GiftDetailActivity extends AppCompatActivity {
         et.setFocusable(false);
         et.setClickable(false);
         et.setLongClickable(false);
+        et.setCursorVisible(false);
+        et.setInputType(InputType.TYPE_NULL);
+        et.setKeyListener(null);
+    }
+
+    private void makeReadOnlyButClickable(EditText et) {
+        if (et == null) return;
+        et.setFocusable(false);
+        et.setClickable(true);
+        et.setLongClickable(true);
         et.setCursorVisible(false);
         et.setInputType(InputType.TYPE_NULL);
         et.setKeyListener(null);
@@ -158,6 +172,29 @@ public class GiftDetailActivity extends AppCompatActivity {
         showImage(imageUrl);
     }
 
+    private String normalizeUrl(String raw) {
+        if (raw == null) return "";
+        String s = raw.trim();
+        if (s.isEmpty()) return "";
+        if (s.startsWith("http://") || s.startsWith("https://")) return s;
+        return "https://" + s;
+    }
+
+    private void openWebsiteLink(String rawUrl) {
+        String url = normalizeUrl(rawUrl);
+        if (url.isEmpty()) {
+            Toast.makeText(this, "Kein Website-Link gespeichert", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Exception e) {
+            Toast.makeText(this, "Link kann nicht geöffnet werden", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void showImage(String uriOrUrl) {
         if (ivGiftImage == null) return;
 
@@ -195,7 +232,6 @@ public class GiftDetailActivity extends AppCompatActivity {
         }
     }
 
-    // Menü rechts oben
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);

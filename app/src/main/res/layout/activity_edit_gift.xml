@@ -50,8 +50,6 @@
                         android:src="@android:drawable/ic_menu_gallery"
                         android:alpha="75"/>
 
-
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -94,7 +92,6 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -105,9 +102,8 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Name: "
-                            android:inputType="numberDecimal" />
+                            android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
-
 
                     <com.google.android.material.textfield.TextInputLayout
                         android:layout_width="match_parent"
@@ -131,7 +127,8 @@
                             android:id="@+id/etLink"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Link: " />
+                            android:hint="Website-Link (optional)"
+                            android:inputType="textUri" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -143,7 +140,6 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Notiz: "
-
                             android:inputType="textMultiLine" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -156,9 +152,10 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Status: "
-                            android:inputType="textMultiLine" />
-
-
+                            android:focusable="false"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:inputType="none" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <LinearLayout
@@ -167,7 +164,6 @@
                         android:orientation="horizontal"
                         android:layout_marginTop="12dp">
 
-                        <!-- DEIN Button 1 (nur Text korrigiert: markieren) -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMarkPlanned"
                             android:layout_width="0dp"
@@ -176,7 +172,6 @@
                             android:text="Als geplant markieren"
                             style="@style/Widget.Material3.Button.OutlinedButton"/>
 
-                        <!-- DEIN Button 2 (nur Text korrigiert: markieren) -->
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btnMarkBought"
                             android:layout_width="0dp"

@@ -1,7 +1,6 @@
 package com.example.geschenkplaner.activity;
 import com.example.geschenkplaner.MainActivity;
 
-
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
@@ -44,6 +43,8 @@ public class EditGiftActivity extends AppCompatActivity {
     private TextInputEditText etName, etPrice, etLink, etNote, etStatus;
 
     private boolean bought = false;
+
+    // Bild getrennt vom Website-Link
     private String imageUrl = "";
 
     private final ActivityResultLauncher<String> photoPicker =
@@ -105,7 +106,7 @@ public class EditGiftActivity extends AppCompatActivity {
 
         etName = findViewById(R.id.etName);
         etPrice = findViewById(R.id.etPrice);
-        etLink = findViewById(R.id.etLink);
+        etLink = findViewById(R.id.etLink);   // Website-Link
         etNote = findViewById(R.id.etNote);
         etStatus = findViewById(R.id.etStatus);
 
@@ -145,6 +146,10 @@ public class EditGiftActivity extends AppCompatActivity {
     private void askForImageUrl() {
         TextInputEditText input = new TextInputEditText(this);
         input.setHint("https://...");
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+
+        // Prefill mit aktueller Bild-URL (nicht Website-Link)
+        input.setText(imageUrl != null ? imageUrl.trim() : "");
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Bild per Link")
@@ -153,7 +158,7 @@ public class EditGiftActivity extends AppCompatActivity {
                 .setPositiveButton("Übernehmen", (d, w) -> {
                     String url = input.getText() != null ? input.getText().toString().trim() : "";
                     if (url.isEmpty()) {
-                        Toast.makeText(this, "Link ist leer", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Bild-Link ist leer", Toast.LENGTH_SHORT).show();
                         return;
                     }
                     imageUrl = url;
@@ -174,7 +179,7 @@ public class EditGiftActivity extends AppCompatActivity {
 
                     String title = doc.getString("title");
                     Double price = doc.getDouble("price");
-                    String link = doc.getString("link");
+                    String link = doc.getString("link"); // Website-Link bleibt "link"
                     String note = doc.getString("note");
                     Boolean b = doc.getBoolean("bought");
                     String img = doc.getString("imageUrl");
@@ -217,7 +222,7 @@ public class EditGiftActivity extends AppCompatActivity {
     private void save() {
         String name = etName != null && etName.getText() != null ? etName.getText().toString().trim() : "";
         String p = etPrice != null && etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
-        String l = etLink != null && etLink.getText() != null ? etLink.getText().toString().trim() : "";
+        String websiteLink = etLink != null && etLink.getText() != null ? etLink.getText().toString().trim() : "";
         String n = etNote != null && etNote.getText() != null ? etNote.getText().toString().trim() : "";
 
         if (name.isEmpty()) {
@@ -238,9 +243,14 @@ public class EditGiftActivity extends AppCompatActivity {
         Map<String, Object> data = new HashMap<>();
         data.put("title", name);
         data.put("price", pVal);
-        data.put("link", l);
+
+        // Website-Link bleibt getrennt
+        data.put("link", websiteLink);
+
         data.put("note", n);
         data.put("bought", bought);
+
+        // Bild getrennt
         data.put("imageUrl", imageUrl);
 
         FirestorePaths.gift(uid, personId, giftId)

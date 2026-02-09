@@ -46,7 +46,7 @@ public class AddGiftActivity extends AppCompatActivity {
 
     private TextInputEditText etName;
     private TextInputEditText etPrice;
-    private TextInputEditText etLink;
+    private TextInputEditText etLink;  // <-- Website-Link (User)
     private TextInputEditText etNote;
     private TextInputEditText etStatus;
 
@@ -54,7 +54,7 @@ public class AddGiftActivity extends AppCompatActivity {
 
     private boolean bought = false;
 
-    // Speichern wir optional ein Bild (Galerie-URI oder URL)
+    // Bild: entweder Galerie-URI ODER Direkt-URL
     private Uri selectedImageUri = null;
     private String imageUrl = "";
 
@@ -94,7 +94,6 @@ public class AddGiftActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        // Views aus deinem neuen XML
         ivGiftImage = findViewById(R.id.ivGiftImage);
 
         tilName = findViewById(R.id.tilName);
@@ -104,11 +103,10 @@ public class AddGiftActivity extends AppCompatActivity {
 
         etName = findViewById(R.id.etName);
         etPrice = findViewById(R.id.etPrice);
-        etLink = findViewById(R.id.etLink);
+        etLink = findViewById(R.id.etLink);   // Website-Link (NICHT Bild!)
         etNote = findViewById(R.id.etNote);
         etStatus = findViewById(R.id.etStatus);
 
-        // Status initial
         renderStatus();
 
         // Bild: Galerie
@@ -116,7 +114,7 @@ public class AddGiftActivity extends AppCompatActivity {
                 pickImageLauncher.launch(new String[]{"image/*"})
         );
 
-        // Bild: URL
+        // Bild: Direkt-URL (separat vom Website-Link!)
         findViewById(R.id.btnImageUrl).setOnClickListener(v -> showImageUrlDialog());
 
         // Status Buttons
@@ -143,7 +141,9 @@ public class AddGiftActivity extends AppCompatActivity {
         EditText input = new EditText(this);
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
         input.setHint("https://...");
-        input.setText(etLink.getText() != null ? etLink.getText().toString().trim() : "");
+
+        // WICHTIG: Prefill aus imageUrl (nicht aus etLink!)
+        input.setText(imageUrl != null ? imageUrl.trim() : "");
 
         new MaterialAlertDialogBuilder(this)
                 .setTitle("Bild per Link")
@@ -153,15 +153,13 @@ public class AddGiftActivity extends AppCompatActivity {
                 .setPositiveButton("Übernehmen", (d, w) -> {
                     String url = input.getText() != null ? input.getText().toString().trim() : "";
                     if (url.isEmpty()) {
-                        Toast.makeText(this, "Kein Link eingegeben", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "Kein Bild-Link eingegeben", Toast.LENGTH_SHORT).show();
                         return;
                     }
+
+                    // Bildquelle = URL, Website-Link bleibt unberührt
                     imageUrl = url;
                     selectedImageUri = null;
-
-                    // Optional auch in etLink übernehmen (passt zur UI)
-                    etLink.setText(url);
-
                     loadImagePreview();
                 })
                 .show();
@@ -180,7 +178,6 @@ public class AddGiftActivity extends AppCompatActivity {
             return;
         }
 
-        // Fallback bleibt Icon im XML
         ivGiftImage.setAlpha(75);
     }
 
@@ -195,7 +192,7 @@ public class AddGiftActivity extends AppCompatActivity {
         }
 
         String p = etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
-        String l = etLink.getText() != null ? etLink.getText().toString().trim() : "";
+        String websiteLink = etLink.getText() != null ? etLink.getText().toString().trim() : "";
         String n = etNote.getText() != null ? etNote.getText().toString().trim() : "";
 
         Double price = null;
@@ -211,16 +208,16 @@ public class AddGiftActivity extends AppCompatActivity {
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
         data.put("personId", personId);
-
-        // Du hattest vorher "title" genutzt — ich lasse das so, damit deine Datenstruktur gleich bleibt
         data.put("title", name);
-
         data.put("price", price);
-        data.put("link", l);
+
+        // Website-Link bleibt weiterhin im Feld "link" (deine bestehende Struktur)
+        data.put("link", websiteLink);
+
         data.put("note", n);
         data.put("bought", bought);
 
-        // Optional Bildfelder (stören nicht, auch wenn du sie später erst nutzt)
+        // Bild getrennt
         data.put("imageUrl", (imageUrl != null && !imageUrl.trim().isEmpty()) ? imageUrl.trim() : null);
         data.put("imageUri", (selectedImageUri != null) ? selectedImageUri.toString() : null);
 

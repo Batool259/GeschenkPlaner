@@ -14,7 +14,6 @@
         app:navigationIcon="@android:drawable/ic_media_previous"
         app:title="Geschenk hinzufügen" />
 
-
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -131,7 +130,8 @@
                             android:id="@+id/etLink"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Link: " />
+                            android:hint="Website-Link (optional)"
+                            android:inputType="textUri" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
