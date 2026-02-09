@@ -249,7 +249,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         etNote.setText(row.note);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle("Person bearbeiten")
+                .setTitle((row.name != null && !row.name.trim().isEmpty()) ? row.name.trim() : "Person bearbeiten")
                 .setView(content)
                 .setPositiveButton("Speichern", (d, w) -> {
                     FirebaseUser user = auth.getCurrentUser();
