@@ -3,7 +3,9 @@ package com.example.geschenkplaner;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -12,6 +14,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.android.material.chip.Chip;
@@ -43,12 +46,10 @@ public class PersonDetailActivity extends AppCompatActivity {
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Up/Back aktivieren (Standard-Pattern mit Toolbar als ActionBar) :contentReference[oaicite:1]{index=1}
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        // User check
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -138,11 +139,16 @@ public class PersonDetailActivity extends AppCompatActivity {
                         Double price = doc.getDouble("price");
                         Boolean bought = doc.getBoolean("bought");
 
+                        String imageUrl = doc.getString("imageUrl");
+                        if (imageUrl != null) imageUrl = imageUrl.trim();
+                        if (imageUrl != null && imageUrl.isEmpty()) imageUrl = null;
+
                         list.add(new GiftRow(
                                 id,
                                 title != null ? title : "—",
                                 price,
-                                bought != null && bought
+                                bought != null && bought,
+                                imageUrl
                         ));
                     }
 
@@ -168,12 +174,14 @@ public class PersonDetailActivity extends AppCompatActivity {
         final String title;
         final Double price;
         final boolean bought;
+        final String imageUrl;
 
-        GiftRow(String id, String title, Double price, boolean bought) {
+        GiftRow(String id, String title, Double price, boolean bought, String imageUrl) {
             this.id = id;
             this.title = title;
             this.price = price;
             this.bought = bought;
+            this.imageUrl = imageUrl;
         }
     }
 
@@ -190,7 +198,7 @@ public class PersonDetailActivity extends AppCompatActivity {
         @NonNull
         @Override
         public GiftVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            android.view.View v = getLayoutInflater().inflate(R.layout.item_gift, parent, false);
+            View v = getLayoutInflater().inflate(R.layout.item_gift, parent, false);
             return new GiftVH(v);
         }
 
@@ -215,12 +223,14 @@ public class PersonDetailActivity extends AppCompatActivity {
 
     private static class GiftVH extends RecyclerView.ViewHolder {
 
+        private final ImageView imgGift;
         private final TextView tvTitle;
         private final TextView tvNote;
         private final Chip chipPrice;
 
-        GiftVH(@NonNull android.view.View itemView) {
+        GiftVH(@NonNull View itemView) {
             super(itemView);
+            imgGift = itemView.findViewById(R.id.imgGift);
             tvTitle = itemView.findViewById(R.id.tvGiftTitle);
             tvNote = itemView.findViewById(R.id.tvGiftNote);
             chipPrice = itemView.findViewById(R.id.chipPrice);
@@ -230,6 +240,18 @@ public class PersonDetailActivity extends AppCompatActivity {
             tvTitle.setText(row.title);
             tvNote.setText(row.bought ? "Gekauft ✅" : "Geplant");
             chipPrice.setText("€ " + (row.price != null ? row.price : "—"));
+
+            // Bild-Logik: imageUrl -> Kreis füllen, sonst Geschenk-Icon
+            if (row.imageUrl != null && !row.imageUrl.trim().isEmpty()) {
+                Glide.with(itemView.getContext())
+                        .load(row.imageUrl)
+                        .placeholder(R.drawable.ic_gift)
+                        .error(R.drawable.ic_gift)
+                        .circleCrop()
+                        .into(imgGift);
+            } else {
+                imgGift.setImageResource(R.drawable.ic_gift);
+            }
         }
     }
 }
