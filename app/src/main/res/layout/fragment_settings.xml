@@ -3,6 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
+    android:paddingTop="24dp"
     android:padding="16dp">
 
 
@@ -13,12 +14,14 @@
         android:text="Eingeloggt als: -"
         android:textStyle="bold"
         android:textSize="16sp"
+        android:layout_marginTop="36dp"
         android:paddingBottom="16dp" />
 
     <Button
         android:id="@+id/btnLogout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="24dp"
         android:text="Ausloggen" />
 
     <Button
@@ -26,6 +29,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Passwort zurücksetzen"
-        android:layout_marginTop="10dp" />
+        android:layout_marginTop="24dp" />
 
 </LinearLayout>
