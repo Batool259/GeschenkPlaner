@@ -2,6 +2,7 @@ package com.example.geschenkplaner;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,6 +30,12 @@ import java.util.Locale;
 public class PersonDetailActivity extends AppCompatActivity {
 
     public static final String EXTRA_PERSON_ID = "personId";
+
+    private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
+    private static final String FRAG_HOME = "home";
+    private static final String FRAG_ADD_PERSON = "add_person";
+    private static final String FRAG_CALENDAR = "calendar";
+    private static final String FRAG_SETTINGS = "settings";
 
     private String uid;
     private String personId;
@@ -89,6 +96,13 @@ public class PersonDetailActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         loadGifts();
+    }
+
+    private void openMainFragment(String which) {
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra(EXTRA_OPEN_FRAGMENT, which);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
     }
 
     private void loadPerson() {
@@ -160,11 +174,36 @@ public class PersonDetailActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
         }
+
+        int id = item.getItemId();
+
+        if (id == R.id.action_menu) return true;
+
+        if (id == R.id.menu_home) {
+            openMainFragment(FRAG_HOME);
+            return true;
+        } else if (id == R.id.menu_add_person) {
+            openMainFragment(FRAG_ADD_PERSON);
+            return true;
+        } else if (id == R.id.menu_calendar) {
+            openMainFragment(FRAG_CALENDAR);
+            return true;
+        } else if (id == R.id.menu_settings) {
+            openMainFragment(FRAG_SETTINGS);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 

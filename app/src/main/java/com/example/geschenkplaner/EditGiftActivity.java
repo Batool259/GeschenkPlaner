@@ -3,6 +3,7 @@ package com.example.geschenkplaner;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.InputType;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.Toast;
@@ -26,12 +27,17 @@ public class EditGiftActivity extends AppCompatActivity {
     public static final String EXTRA_PERSON_ID = "personId";
     public static final String EXTRA_GIFT_ID = "giftId";
 
+    private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
+    private static final String FRAG_HOME = "home";
+    private static final String FRAG_ADD_PERSON = "add_person";
+    private static final String FRAG_CALENDAR = "calendar";
+    private static final String FRAG_SETTINGS = "settings";
+
     private String uid;
     private String personId;
     private String giftId;
 
     private ImageView ivGiftImage;
-
     private TextInputEditText etName, etPrice, etLink, etNote, etStatus;
 
     private boolean bought = false;
@@ -56,6 +62,13 @@ public class EditGiftActivity extends AppCompatActivity {
         setupClickListeners();
 
         loadGiftToFields();
+    }
+
+    private void openMainFragment(String which) {
+        Intent i = new Intent(this, MainActivity.class);
+        i.putExtra(EXTRA_OPEN_FRAGMENT, which);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        startActivity(i);
     }
 
     private void setupToolbar() {
@@ -93,19 +106,15 @@ public class EditGiftActivity extends AppCompatActivity {
         etNote = findViewById(R.id.etNote);
         etStatus = findViewById(R.id.etStatus);
 
-        // Status ist Anzeige, nicht direkt editierbar
         makeReadOnly(etStatus);
 
-        // Layout hat teils alpha="75" -> wir setzen zuverlässig sinnvolle Werte
         if (ivGiftImage != null) ivGiftImage.setAlpha(1f);
     }
 
     private void setupClickListeners() {
-        // Bild-Buttons (oben)
         findViewById(R.id.btnPickImage).setOnClickListener(v -> photoPicker.launch("image/*"));
         findViewById(R.id.btnImageUrl).setOnClickListener(v -> askForImageUrl());
 
-        // Status-Buttons (unten) – NEUE IDs!
         findViewById(R.id.btnMarkPlanned).setOnClickListener(v -> {
             bought = false;
             renderStatus();
@@ -116,7 +125,6 @@ public class EditGiftActivity extends AppCompatActivity {
             renderStatus();
         });
 
-        // Save/Cancel
         findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
         findViewById(R.id.btnSave).setOnClickListener(v -> save());
     }
@@ -184,9 +192,7 @@ public class EditGiftActivity extends AppCompatActivity {
     }
 
     private void renderStatus() {
-        if (etStatus != null) {
-            etStatus.setText(bought ? "Gekauft ✅" : "Geplant");
-        }
+        if (etStatus != null) etStatus.setText(bought ? "Gekauft ✅" : "Geplant");
     }
 
     private void showImage(String uriOrUrl) {
@@ -202,9 +208,7 @@ public class EditGiftActivity extends AppCompatActivity {
         ivGiftImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
         ivGiftImage.setAlpha(1f);
 
-        Glide.with(this)
-                .load(uriOrUrl)
-                .into(ivGiftImage);
+        Glide.with(this).load(uriOrUrl).into(ivGiftImage);
     }
 
     private void save() {
@@ -248,11 +252,36 @@ public class EditGiftActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
         }
+
+        int id = item.getItemId();
+
+        if (id == R.id.action_menu) return true;
+
+        if (id == R.id.menu_home) {
+            openMainFragment(FRAG_HOME);
+            return true;
+        } else if (id == R.id.menu_add_person) {
+            openMainFragment(FRAG_ADD_PERSON);
+            return true;
+        } else if (id == R.id.menu_calendar) {
+            openMainFragment(FRAG_CALENDAR);
+            return true;
+        } else if (id == R.id.menu_settings) {
+            openMainFragment(FRAG_SETTINGS);
+            return true;
+        }
+
         return super.onOptionsItemSelected(item);
     }
 }

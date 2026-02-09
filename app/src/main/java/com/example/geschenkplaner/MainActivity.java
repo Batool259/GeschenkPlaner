@@ -21,11 +21,17 @@ public class MainActivity extends AppCompatActivity {
 
     private MaterialToolbar toolbar;
 
+    // Muss exakt zu den 4 Unterseiten passen
+    private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
+    private static final String FRAG_HOME = "home";
+    private static final String FRAG_ADD_PERSON = "add_person";
+    private static final String FRAG_CALENDAR = "calendar";
+    private static final String FRAG_SETTINGS = "settings";
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Login-Check
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Intent i = new Intent(this, LoginActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -36,28 +42,46 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        // Toolbar setzen
         toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        // Menü-Icon (Burger) IMMER anzeigen
         toolbar.setNavigationIcon(null);
         toolbar.setNavigationOnClickListener(null);
 
-        // Kein Back-Pfeil in MainActivity
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        // Toolbar bei Fragmentwechsel aktualisieren
         getSupportFragmentManager()
                 .addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
 
-        // Startfragment
         if (savedInstanceState == null) {
-            replaceFragment(new HomeFragment());
+            // Neu: Startfragment kann per Intent kommen
+            handleStartNavigation(getIntent());
         } else {
             applyToolbarFromCurrentFragment();
+        }
+    }
+
+    // Neu: wenn MainActivity schon existiert (SINGLE_TOP) kommt hier das neue Intent an
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        setIntent(intent);
+        handleStartNavigation(intent);
+    }
+
+    private void handleStartNavigation(Intent intent) {
+        String target = intent != null ? intent.getStringExtra(EXTRA_OPEN_FRAGMENT) : null;
+
+        if (FRAG_ADD_PERSON.equals(target)) {
+            replaceFragment(new AddPersonFragment());
+        } else if (FRAG_CALENDAR.equals(target)) {
+            replaceFragment(new CalendarFragment());
+        } else if (FRAG_SETTINGS.equals(target)) {
+            replaceFragment(new SettingsFragment());
+        } else {
+            replaceFragment(new HomeFragment());
         }
     }
 
@@ -72,7 +96,6 @@ public class MainActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         if (id == R.id.action_menu) {
-            // Burger rechts wurde geklickt -> Submenu geht automatisch auf
             return true;
         }
 
@@ -92,8 +115,6 @@ public class MainActivity extends AppCompatActivity {
 
         return super.onOptionsItemSelected(item);
     }
-
-
 
     private void replaceFragment(Fragment fragment) {
         getSupportFragmentManager()
@@ -118,7 +139,6 @@ public class MainActivity extends AppCompatActivity {
         } else {
             toolbar.setTitle(title);
         }
-
     }
 
     public void navigateToAddPerson() {
