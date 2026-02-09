@@ -50,6 +50,8 @@
                         android:src="@android:drawable/ic_menu_gallery"
                         android:alpha="75"/>
 
+
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -141,9 +143,49 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:hint="Notiz: "
-                            android:minLines="2"
+
                             android:inputType="textMultiLine" />
                     </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Status: "
+                            android:inputType="textMultiLine" />
+
+
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <!-- DEIN Button 1 (nur Text korrigiert: markieren) -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMarkPlanned"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Als geplant markieren"
+                            style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+                        <!-- DEIN Button 2 (nur Text korrigiert: markieren) -->
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMarkBought"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:text="Als gekauft markieren"
+                            style="@style/Widget.Material3.Button.OutlinedButton"/>
+                    </LinearLayout>
 
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
