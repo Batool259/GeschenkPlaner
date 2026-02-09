@@ -3,18 +3,24 @@ package com.example.geschenkplaner.activity;
 import com.example.geschenkplaner.MainActivity;
 
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.text.InputType;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.TextView;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.geschenkplaner.R;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.Timestamp;
@@ -36,16 +42,39 @@ public class AddGiftActivity extends AppCompatActivity {
     private String uid;
     private String personId;
 
-    private TextInputLayout tilTitle;
-    private TextInputEditText etTitle;
+    private TextInputLayout tilName, tilPrice, tilLink, tilNote;
 
-    private TextView tvStatus;
+    private TextInputEditText etName;
+    private TextInputEditText etPrice;
+    private TextInputEditText etLink;
+    private TextInputEditText etNote;
+    private TextInputEditText etStatus;
 
-    private TextInputLayout tilPrice, tilLink, tilNote;
-    private TextInputEditText etPrice, etLink, etNote;
+    private ImageView ivGiftImage;
 
-    private View bottomBar;
     private boolean bought = false;
+
+    // Speichern wir optional ein Bild (Galerie-URI oder URL)
+    private Uri selectedImageUri = null;
+    private String imageUrl = "";
+
+    private final ActivityResultLauncher<String[]> pickImageLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri == null) return;
+
+                try {
+                    getContentResolver().takePersistableUriPermission(
+                            uri,
+                            Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    );
+                } catch (Exception ignored) {
+                    // Manche Provider erlauben keine persistente Permission – ist dann trotzdem oft lesbar.
+                }
+
+                selectedImageUri = uri;
+                imageUrl = "";
+                loadImagePreview();
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,36 +94,38 @@ public class AddGiftActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
-        tilTitle = findViewById(R.id.tilTitle);
-        etTitle  = findViewById(R.id.etTitle);
+        // Views aus deinem neuen XML
+        ivGiftImage = findViewById(R.id.ivGiftImage);
 
-        tvStatus = findViewById(R.id.tvStatus);
-
+        tilName = findViewById(R.id.tilName);
         tilPrice = findViewById(R.id.tilPrice);
-        tilLink  = findViewById(R.id.tilLink);
-        tilNote  = findViewById(R.id.tilNote);
+        tilLink = findViewById(R.id.tilLink);
+        tilNote = findViewById(R.id.tilNote);
 
+        etName = findViewById(R.id.etName);
         etPrice = findViewById(R.id.etPrice);
-        etLink  = findViewById(R.id.etLink);
-        etNote  = findViewById(R.id.etNote);
+        etLink = findViewById(R.id.etLink);
+        etNote = findViewById(R.id.etNote);
+        etStatus = findViewById(R.id.etStatus);
 
-        bottomBar = findViewById(R.id.bottomBar);
+        // Status initial
+        renderStatus();
 
-        findViewById(R.id.btnUploadImage).setOnClickListener(v ->
-                Toast.makeText(this, "Bild-Upload kommt später ", Toast.LENGTH_SHORT).show()
+        // Bild: Galerie
+        findViewById(R.id.btnPickImage).setOnClickListener(v ->
+                pickImageLauncher.launch(new String[]{"image/*"})
         );
 
+        // Bild: URL
+        findViewById(R.id.btnImageUrl).setOnClickListener(v -> showImageUrlDialog());
+
+        // Status Buttons
         findViewById(R.id.btnMarkBought).setOnClickListener(v -> { bought = true; renderStatus(); });
         findViewById(R.id.btnMarkPlanned).setOnClickListener(v -> { bought = false; renderStatus(); });
 
-        findViewById(R.id.btnEdit).setVisibility(View.GONE);
-        findViewById(R.id.btnDeleteGift).setVisibility(View.GONE);
-
-        bottomBar.setVisibility(View.VISIBLE);
+        // Buttons unten
         findViewById(R.id.btnCancel).setOnClickListener(v -> finish());
         findViewById(R.id.btnSave).setOnClickListener(v -> saveNewGift());
-
-        renderStatus();
     }
 
     private void openMainFragment(String which) {
@@ -105,17 +136,62 @@ public class AddGiftActivity extends AppCompatActivity {
     }
 
     private void renderStatus() {
-        tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
+        etStatus.setText(bought ? "Gekauft ✅" : "Geplant");
+    }
+
+    private void showImageUrlDialog() {
+        EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_URI);
+        input.setHint("https://...");
+        input.setText(etLink.getText() != null ? etLink.getText().toString().trim() : "");
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Bild per Link")
+                .setMessage("Füge einen direkten Bild-Link ein (z.B. .jpg/.png).")
+                .setView(input)
+                .setNegativeButton("Abbrechen", (d, w) -> d.dismiss())
+                .setPositiveButton("Übernehmen", (d, w) -> {
+                    String url = input.getText() != null ? input.getText().toString().trim() : "";
+                    if (url.isEmpty()) {
+                        Toast.makeText(this, "Kein Link eingegeben", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    imageUrl = url;
+                    selectedImageUri = null;
+
+                    // Optional auch in etLink übernehmen (passt zur UI)
+                    etLink.setText(url);
+
+                    loadImagePreview();
+                })
+                .show();
+    }
+
+    private void loadImagePreview() {
+        if (selectedImageUri != null) {
+            Glide.with(this).load(selectedImageUri).centerCrop().into(ivGiftImage);
+            ivGiftImage.setAlpha(255);
+            return;
+        }
+
+        if (imageUrl != null && !imageUrl.trim().isEmpty()) {
+            Glide.with(this).load(imageUrl.trim()).centerCrop().into(ivGiftImage);
+            ivGiftImage.setAlpha(255);
+            return;
+        }
+
+        // Fallback bleibt Icon im XML
+        ivGiftImage.setAlpha(75);
     }
 
     private void saveNewGift() {
-        String title = etTitle.getText() != null ? etTitle.getText().toString().trim() : "";
+        String name = etName.getText() != null ? etName.getText().toString().trim() : "";
 
-        if (title.isEmpty()) {
-            tilTitle.setError("Bitte Geschenkname eingeben");
+        if (name.isEmpty()) {
+            tilName.setError("Bitte Geschenkname eingeben");
             return;
         } else {
-            tilTitle.setError(null);
+            tilName.setError(null);
         }
 
         String p = etPrice.getText() != null ? etPrice.getText().toString().trim() : "";
@@ -135,17 +211,25 @@ public class AddGiftActivity extends AppCompatActivity {
         Map<String, Object> data = new HashMap<>();
         data.put("uid", uid);
         data.put("personId", personId);
-        data.put("title", title);
+
+        // Du hattest vorher "title" genutzt — ich lasse das so, damit deine Datenstruktur gleich bleibt
+        data.put("title", name);
+
         data.put("price", price);
         data.put("link", l);
         data.put("note", n);
         data.put("bought", bought);
+
+        // Optional Bildfelder (stören nicht, auch wenn du sie später erst nutzt)
+        data.put("imageUrl", (imageUrl != null && !imageUrl.trim().isEmpty()) ? imageUrl.trim() : null);
+        data.put("imageUri", (selectedImageUri != null) ? selectedImageUri.toString() : null);
+
         data.put("createdAt", Timestamp.now());
 
         FirestorePaths.gifts(uid, personId)
                 .add(data)
                 .addOnSuccessListener(r -> {
-                    Toast.makeText(this, "Geschenk gespeichert ", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Geschenk gespeichert", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e ->

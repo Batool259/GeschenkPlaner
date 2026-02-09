@@ -14,6 +14,7 @@
         app:navigationIcon="@android:drawable/ic_media_previous"
         app:title="Geschenk hinzufügen" />
 
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -26,7 +27,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Upload Card -->
+            <!-- Bild -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,32 +42,50 @@
                     android:padding="16dp"
                     android:gravity="center">
 
-                    <com.google.android.material.imageview.ShapeableImageView
-                        android:id="@+id/imgGiftPreview"
-                        android:layout_width="84dp"
-                        android:layout_height="84dp"
-                        android:contentDescription="Vorschau Geschenkbild"
+                    <ImageView
+                        android:id="@+id/ivGiftImage"
+                        android:layout_width="120dp"
+                        android:layout_height="120dp"
+                        android:layout_gravity="center"
                         android:scaleType="centerCrop"
-                        app:shapeAppearance="@style/Shape.Circle"
-                        app:srcCompat="@drawable/ic_gift" />
+                        android:src="@android:drawable/ic_menu_gallery"
+                        android:alpha="75"/>
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnUploadImage"
-                        android:layout_width="wrap_content"
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Bild auswählen"
-                        android:layout_marginTop="12dp"
-                        app:cornerRadius="999dp"/>
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnPickImage"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Aus Galerie"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            app:cornerRadius="999dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnImageUrl"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="12dp"
+                            android:text="Per Link"
+                            style="@style/Widget.Material3.Button.OutlinedButton"
+                            app:cornerRadius="999dp" />
+                    </LinearLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Details Card -->
+            <!-- Felder -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="14dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -74,183 +93,129 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Details"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:layout_marginBottom="8dp"/>
-
                     <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilTitle"
+                        android:id="@+id/tilName"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="10dp">
+                        android:layout_marginBottom="8dp">
 
                         <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etTitle"
+                            android:id="@+id/etName"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Geschenkname"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:inputType="textCapSentences"/>
+                            android:hint="Name: "
+                            android:inputType="textPersonName" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <!-- Preis -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilPrice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:hint="Preis (z.B. 39,99)">
+                        android:layout_marginBottom="8dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etPrice"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="numberDecimal"/>
+                            android:hint="Preis: (z.B. 39.99)"
+                            android:inputType="numberDecimal" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:alpha="0.15"
-                        android:background="@android:color/black"/>
-
-                    <!-- Link -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilLink"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:hint="Link">
+                        android:layout_marginBottom="8dp">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etLink"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="textUri"/>
+                            android:hint="Link: " />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:alpha="0.15"
-                        android:background="@android:color/black"/>
-
-                    <!-- Notiz -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilNote"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="8dp"
-                        android:hint="Notiz">
+                        android:layout_height="wrap_content">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etNote"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:minLines="2"
-                            android:inputType="textMultiLine"/>
+                            android:hint="Notiz: "
+                            android:inputType="textMultiLine" />
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
-                        android:id="@+id/tvStatus"
-                        android:layout_width="wrap_content"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/tilStatus"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/etStatus"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:hint="Status: "
+                            android:focusable="false"
+                            android:clickable="false"
+                            android:cursorVisible="false"
+                            android:inputType="none" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="Status: —"
-                        android:layout_marginTop="6dp"
-                        android:alpha="0.85"/>
+                        android:orientation="horizontal"
+                        android:layout_marginTop="12dp">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMarkPlanned"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="Als geplant markieren"
+                            style="@style/Widget.Material3.Button.OutlinedButton"/>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btnMarkBought"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="12dp"
+                            android:layout_weight="1"
+                            android:text="Als gekauft markieren"
+                            style="@style/Widget.Material3.Button.OutlinedButton"/>
+                    </LinearLayout>
+
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Aktionen Card -->
-            <com.google.android.material.card.MaterialCardView
+            <!-- Buttons -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="160dp">
+                android:orientation="horizontal"
+                android:layout_marginTop="14dp">
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnCancel"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:padding="16dp">
+                    android:layout_weight="1"
+                    android:text="Abbrechen"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    app:cornerRadius="999dp" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Aktionen"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:layout_marginBottom="10dp"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnMarkBought"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Als gekauft markieren"
-                        app:cornerRadius="14dp"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnMarkPlanned"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Als geplant markieren"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Bearbeiten"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnDeleteGift"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Löschen"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp" />
-                </LinearLayout>
-            </com.google.android.material.card.MaterialCardView>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnSave"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="12dp"
+                    android:text="Speichern"
+                    app:cornerRadius="999dp" />
+            </LinearLayout>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <LinearLayout
-        android:id="@+id/bottomBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:padding="16dp"
-        android:orientation="horizontal"
-        android:background="@android:color/white"
-        android:elevation="8dp"
-        android:visibility="gone">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Abbrechen"
-            app:cornerRadius="999dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSave"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:text="Speichern"
-            app:cornerRadius="999dp"/>
-    </LinearLayout>
-
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
