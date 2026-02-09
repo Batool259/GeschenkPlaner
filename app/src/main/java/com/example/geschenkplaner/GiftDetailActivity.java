@@ -3,14 +3,23 @@ package com.example.geschenkplaner;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class GiftDetailActivity extends AppCompatActivity {
 
@@ -24,12 +33,26 @@ public class GiftDetailActivity extends AppCompatActivity {
     private String giftId;
 
     private TextView tvTitle, tvPrice, tvLink, tvNote, tvStatus;
+    private ImageView ivGiftImage;
 
     private String title = "—";
     private Double price = null;
     private String link = "";
     private String note = "";
     private boolean bought = false;
+
+    private String imageUrl = ""; // Firestore Feld: "imageUrl"
+
+    // Java-kompatibel: Bild aus Galerie/Dateien wählen (keine extra Permission nötig).
+    // Quelle: Activity Result API / GetContent: https://developer.android.com/training/basics/intents/result
+    private final ActivityResultLauncher<String> photoPicker =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) return;
+
+                imageUrl = uri.toString();
+                showImage(imageUrl);
+                saveImageUrlToFirestore();
+            });
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,11 +73,16 @@ public class GiftDetailActivity extends AppCompatActivity {
         if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        ivGiftImage = findViewById(R.id.ivGiftImage);
+
         tvTitle = findViewById(R.id.tvTitle);
         tvPrice = findViewById(R.id.tvPrice);
         tvLink  = findViewById(R.id.tvLink);
         tvNote  = findViewById(R.id.tvNote);
         tvStatus= findViewById(R.id.tvStatus);
+
+        findViewById(R.id.btnPickImage).setOnClickListener(v -> pickFromGallery());
+        findViewById(R.id.btnImageUrl).setOnClickListener(v -> askForImageUrl());
 
         findViewById(R.id.btnEdit).setOnClickListener(v -> {
             Intent i = new Intent(this, EditGiftActivity.class);
@@ -68,6 +96,53 @@ public class GiftDetailActivity extends AppCompatActivity {
         loadGift();
     }
 
+    private void pickFromGallery() {
+        // Öffnet System-Picker (Bilder). Quelle: https://developer.android.com/training/basics/intents/result
+        photoPicker.launch("image/*");
+    }
+
+    private void askForImageUrl() {
+        EditText input = new EditText(this);
+        input.setHint("https://...");
+
+        new MaterialAlertDialogBuilder(this)
+                .setTitle("Bild per Link")
+                .setView(input)
+                .setNegativeButton("Abbrechen", (d, w) -> d.dismiss())
+                .setPositiveButton("Speichern", (d, w) -> {
+                    String url = input.getText() != null ? input.getText().toString().trim() : "";
+                    if (url.isEmpty()) {
+                        Toast.makeText(this, "Link ist leer", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    imageUrl = url;
+                    showImage(imageUrl);
+                    saveImageUrlToFirestore();
+                })
+                .show();
+    }
+
+    private void showImage(String anyUriOrUrl) {
+        if (anyUriOrUrl == null || anyUriOrUrl.trim().isEmpty()) {
+            ivGiftImage.setImageResource(android.R.drawable.ic_menu_gallery);
+            return;
+        }
+        Glide.with(this)
+                .load(anyUriOrUrl)
+                .centerCrop()
+                .into(ivGiftImage);
+    }
+
+    private void saveImageUrlToFirestore() {
+        Map<String, Object> data = new HashMap<>();
+        data.put("imageUrl", imageUrl);
+
+        FirestorePaths.gift(uid, personId, giftId)
+                .update(data)
+                .addOnSuccessListener(v -> Toast.makeText(this, "Bild gespeichert ✅", Toast.LENGTH_SHORT).show())
+                .addOnFailureListener(e -> Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
+    }
+
     private void render() {
         tvTitle.setText(title);
 
@@ -77,6 +152,8 @@ public class GiftDetailActivity extends AppCompatActivity {
         tvLink.setText("Link: " + (!link.trim().isEmpty() ? link : "—"));
         tvNote.setText("Notiz: " + (!note.trim().isEmpty() ? note : "—"));
         tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
+
+        showImage(imageUrl);
     }
 
     private void loadGift() {
@@ -91,6 +168,8 @@ public class GiftDetailActivity extends AppCompatActivity {
                     note = doc.getString("note") != null ? doc.getString("note") : "";
                     Boolean b = doc.getBoolean("bought");
                     bought = b != null && b;
+
+                    imageUrl = doc.getString("imageUrl") != null ? doc.getString("imageUrl") : "";
 
                     render();
                 })
@@ -113,7 +192,7 @@ public class GiftDetailActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == REQ_EDIT_GIFT && resultCode == RESULT_OK) {
-            loadGift(); // nach Speichern neu laden
+            loadGift();
         }
     }
 
