@@ -14,7 +14,6 @@
         android:padding="12dp"
         android:gravity="center_vertical">
 
-        <!-- Kreisbild: Bild füllt Kreis, sonst Geschenk-Icon -->
         <com.google.android.material.imageview.ShapeableImageView
             android:id="@+id/imgGift"
             android:layout_width="54dp"
@@ -22,7 +21,6 @@
             android:scaleType="centerCrop"
             android:background="@drawable/bg_initial_circle"
             app:shapeAppearance="@style/Shape.Circle"/>
-
 
         <LinearLayout
             android:layout_width="0dp"

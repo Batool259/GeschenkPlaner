@@ -18,6 +18,7 @@
         <activity android:name=".PersonDetailActivity" />
         <activity android:name=".AddGiftActivity" />
         <activity android:name=".GiftDetailActivity" />
+        <activity android:name=".EditGiftActivity" />
 
         <!-- Start-Screen (Router) -->
         <activity

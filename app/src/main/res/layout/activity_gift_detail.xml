@@ -26,7 +26,7 @@
             android:orientation="vertical"
             android:padding="16dp">
 
-            <!-- Upload Card -->
+            <!-- Bild -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -44,20 +44,12 @@
                     <ImageView
                         android:layout_width="72dp"
                         android:layout_height="72dp"
-                        android:src="@android:drawable/ic_menu_upload"
-                        android:alpha="0.65"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnUploadImage"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Bild hochladen"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="999dp"/>
+                        android:src="@android:drawable/ic_menu_gallery"
+                        android:alpha="0.6"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Details Card -->
+            <!-- Details -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -72,123 +64,51 @@
                     android:padding="16dp">
 
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Details"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:layout_marginBottom="8dp"/>
-
-                    <TextView
                         android:id="@+id/tvTitle"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="—"
                         android:textStyle="bold"
                         android:textSize="20sp"
-                        android:layout_marginBottom="10dp"/>
+                        android:layout_marginBottom="10dp"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
 
-                    <!-- PREIS Anzeige -->
                     <TextView
                         android:id="@+id/tvPrice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="Preis: —"
-                        android:paddingVertical="10dp"/>
-
-                    <!-- PREIS Edit (versteckt bis Bearbeiten) -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilPrice"
+                        android:paddingVertical="6dp"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_height="wrap_content"/>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etPrice"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Preis (z.B. 39.99)"
-                            android:inputType="numberDecimal"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:alpha="0.15"
-                        android:background="@android:color/black"/>
-
-                    <!-- LINK Anzeige -->
                     <TextView
                         android:id="@+id/tvLink"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="Link: —"
-                        android:paddingVertical="10dp"/>
-
-                    <!-- LINK Edit -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilLink"
+                        android:paddingVertical="6dp"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_height="wrap_content"/>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etLink"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Link"/>
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <View
-                        android:layout_width="match_parent"
-                        android:layout_height="1dp"
-                        android:alpha="0.15"
-                        android:background="@android:color/black"/>
-
-                    <!-- NOTIZ Anzeige -->
                     <TextView
                         android:id="@+id/tvNote"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="Notiz: —"
-                        android:paddingVertical="10dp"/>
-
-                    <!-- NOTIZ Edit -->
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/tilNote"
+                        android:paddingVertical="6dp"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/etNote"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:hint="Notiz"
-                            android:minLines="2"
-                            android:inputType="textMultiLine"/>
-                    </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_height="wrap_content"/>
 
                     <TextView
                         android:id="@+id/tvStatus"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
                         android:text="Status: —"
                         android:layout_marginTop="6dp"
-                        android:alpha="0.85"/>
+                        android:alpha="0.85"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
-            <!-- Aktionen Card -->
+            <!-- Aktionen -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 app:cardCornerRadius="20dp"
-                app:cardElevation="2dp"
-                android:layout_marginBottom="160dp">
+                app:cardElevation="2dp">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -196,83 +116,23 @@
                     android:orientation="vertical"
                     android:padding="16dp">
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Aktionen"
-                        android:textStyle="bold"
-                        android:textSize="18sp"
-                        android:layout_marginBottom="10dp"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnMarkBought"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Als gekauft markieren"
-                        app:cornerRadius="14dp"
-                        style="@style/Widget.Material3.Button.TonalButton"/>
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/btnMarkPlanned"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Als geplant markieren"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp"
-                        style="@style/Widget.Material3.Button.TonalButton"/>
-
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnEdit"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="Bearbeiten"
-                        android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton"/>
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnDeleteGift"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
                         android:text="Löschen"
                         android:layout_marginTop="10dp"
-                        app:cornerRadius="14dp"
-                        style="@style/Widget.Material3.Button.OutlinedButton"/>
+                        style="@style/Widget.Material3.Button.OutlinedButton"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"/>
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>
-
-    <!-- Bottom Bar: nur im Edit-Mode sichtbar -->
-    <LinearLayout
-        android:id="@+id/bottomBar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:padding="16dp"
-        android:orientation="horizontal"
-        android:background="@android:color/white"
-        android:elevation="8dp"
-        android:visibility="gone">
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnCancel"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Abbrechen"
-            style="@style/Widget.Material3.Button.OutlinedButton"
-            app:cornerRadius="999dp"/>
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnSave"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="12dp"
-            android:text="Speichern"
-            app:cornerRadius="999dp"/>
-    </LinearLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
