@@ -5,7 +5,6 @@
     android:orientation="vertical"
     android:padding="16dp">
 
-
     <CalendarView
         android:id="@+id/calendarView"
         android:layout_width="match_parent"
@@ -16,26 +15,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
-        android:text="Keine markierten Tage"/>
+        android:text="Keine markierten Tage" />
 
     <TextView
         android:id="@+id/tvDate"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:paddingTop="10dp"/>
-
-    <EditText
-        android:id="@+id/etEvent"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Eintrag (z.B. Geschenk kaufen)" />
-
-    <Button
-        android:id="@+id/btnSave"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Speichern" />
+        android:paddingTop="10dp"
+        android:textStyle="bold" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvEvents"

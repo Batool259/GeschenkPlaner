@@ -18,7 +18,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.geschenkplaner.R;
-import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
@@ -39,16 +38,12 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         return "Kalender";
     }
 
-
     private CalendarView calendarView;
     private TextView tvSelectedDate;
-    private EditText etEvent;
-    private View btnSave;
-
-    private RecyclerView rvEvents;
-    private EventAdapter adapter;
-
     private TextView tvMarkedDays;
+    private RecyclerView rvEvents;
+
+    private EventAdapter adapter;
 
     private FirebaseFirestore db;
     private String uid;
@@ -60,11 +55,9 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
 
     @Nullable
     @Override
-    public View onCreateView(
-            @NonNull LayoutInflater inflater,
-            @Nullable ViewGroup container,
-            @Nullable Bundle savedInstanceState
-    ) {
+    public View onCreateView(@NonNull LayoutInflater inflater,
+                             @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_calendar, container, false);
     }
 
@@ -74,10 +67,8 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
 
         calendarView = v.findViewById(R.id.calendarView);
         tvSelectedDate = v.findViewById(R.id.tvDate);
-        etEvent = v.findViewById(R.id.etEvent);
-        btnSave = v.findViewById(R.id.btnSave);
-        rvEvents = v.findViewById(R.id.rvEvents);
         tvMarkedDays = v.findViewById(R.id.tvMarkedDays);
+        rvEvents = v.findViewById(R.id.rvEvents);
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Toast.makeText(getContext(), "Bitte einloggen", Toast.LENGTH_SHORT).show();
@@ -98,28 +89,44 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         loadEventsForSelectedDate();
         loadMarkedDays();
 
+        // Datum klicken -> anzeigen + Dialog zum Hinzufügen
         calendarView.setOnDateChangeListener((view, year, month, dayOfMonth) -> {
             Calendar c = Calendar.getInstance();
             c.set(year, month, dayOfMonth);
+
             dateKey = sdf.format(c.getTime());
             tvSelectedDate.setText("🟣 " + dateKey);
-            loadEventsForSelectedDate();
-        });
 
-        btnSave.setOnClickListener(x -> saveEvent());
+            loadEventsForSelectedDate();
+            showAddEventDialog(); // 👈 Eingabe direkt beim Klick
+        });
     }
 
-    private void saveEvent() {
-        String text = etEvent.getText().toString().trim();
-        if (TextUtils.isEmpty(text)) {
-            Toast.makeText(getContext(), "Text eingeben", Toast.LENGTH_SHORT).show();
-            return;
-        }
+    // ----------------------------
+    // Dialog: neuen Eintrag hinzufügen
+    // ----------------------------
+    private void showAddEventDialog() {
+        EditText input = new EditText(requireContext());
+        input.setHint("Eintrag (z.B. Geschenk kaufen)");
 
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Eintrag für " + dateKey)
+                .setView(input)
+                .setPositiveButton("Speichern", (d, w) -> {
+                    String text = input.getText().toString().trim();
+                    if (TextUtils.isEmpty(text)) {
+                        Toast.makeText(getContext(), "Text eingeben", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    saveEventText(text);
+                })
+                .setNegativeButton("Abbrechen", null)
+                .show();
+    }
+
+    private void saveEventText(String text) {
         Map<String, Object> data = new HashMap<>();
-        // optional, aber praktisch
         data.put("uid", uid);
-
         data.put("dateKey", dateKey);
         data.put("text", text);
         data.put("createdAt", Timestamp.now());
@@ -128,7 +135,6 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         FirestorePaths.events(uid)
                 .add(data)
                 .addOnSuccessListener(r -> {
-                    etEvent.setText("");
                     loadEventsForSelectedDate();
                     loadMarkedDays();
                 })
@@ -144,10 +150,8 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 .addOnSuccessListener(qs -> {
                     ArrayList<EventRow> list = new ArrayList<>();
                     for (QueryDocumentSnapshot doc : qs) {
-                        list.add(new EventRow(
-                                doc.getId(),
-                                doc.getString("text") != null ? doc.getString("text") : "—"
-                        ));
+                        String txt = doc.getString("text");
+                        list.add(new EventRow(doc.getId(), txt != null ? txt : "—"));
                     }
                     adapter.setItems(list);
                 });
@@ -162,6 +166,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                         String dk = doc.getString("dateKey");
                         if (dk != null && !days.contains(dk)) days.add(dk);
                     }
+
                     if (days.isEmpty()) {
                         tvMarkedDays.setText("Keine markierten Tage");
                     } else {
@@ -175,7 +180,9 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 });
     }
 
-    // --- Adapter + Model ---
+    // ----------------------------
+    // RecyclerView: Model + Adapter
+    // ----------------------------
     private static class EventRow {
         final String id;
         final String text;
@@ -187,7 +194,6 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
     }
 
     private class EventAdapter extends RecyclerView.Adapter<EventVH> {
-
         private final ArrayList<EventRow> items = new ArrayList<>();
 
         void setItems(ArrayList<EventRow> list) {
