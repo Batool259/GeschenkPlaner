@@ -1,4 +1,4 @@
-package model;
+package com.example.geschenkplaner.model;
 
 public class GiftItem {
 

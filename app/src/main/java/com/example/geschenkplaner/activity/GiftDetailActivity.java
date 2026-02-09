@@ -1,4 +1,5 @@
-package com.example.geschenkplaner;
+package com.example.geschenkplaner.activity;
+import com.example.geschenkplaner.MainActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -12,6 +13,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.bumptech.glide.Glide;
+import com.example.geschenkplaner.R;
 import com.example.geschenkplaner.data.FirestorePaths;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
