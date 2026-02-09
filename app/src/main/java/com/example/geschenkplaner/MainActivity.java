@@ -145,4 +145,9 @@ public class MainActivity extends AppCompatActivity {
     public void navigateToAddPerson() {
         replaceFragment(new AddPersonFragment());
     }
+
+    // ✅ Neu: von überall zurück zur Home
+    public void openHome() {
+        replaceFragment(new HomeFragment());
+    }
 }

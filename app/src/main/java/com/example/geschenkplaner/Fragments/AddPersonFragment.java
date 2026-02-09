@@ -13,8 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import com.example.geschenkplaner.MainActivity;
 import com.example.geschenkplaner.R;
-import com.example.geschenkplaner.Fragments.ToolbarConfig;
 import com.google.firebase.Timestamp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.firestore.FirebaseFirestore;
@@ -24,12 +24,10 @@ import java.util.Map;
 
 public class AddPersonFragment extends Fragment implements ToolbarConfig {
 
-
     @Override
-        public String getToolbarTitle() {
-            return "Person hinzufügen";
-        }
-
+    public String getToolbarTitle() {
+        return "Person hinzufügen";
+    }
 
     private EditText etName, etBirthday, etNote;
     private FirebaseFirestore db;
@@ -57,19 +55,24 @@ public class AddPersonFragment extends Fragment implements ToolbarConfig {
 
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Toast.makeText(getContext(), "Bitte einloggen.", Toast.LENGTH_SHORT).show();
+            goHome();
             return;
         }
 
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
         db = FirebaseFirestore.getInstance();
 
-        btnCancel.setOnClickListener(v -> {
-            if (requireActivity().getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                requireActivity().getSupportFragmentManager().popBackStack();
-            }
-        });
+        //  Abbrechen -> Home
+        btnCancel.setOnClickListener(v -> goHome());
 
+        //  Speichern -> danach Home
         btnSave.setOnClickListener(v -> savePerson());
+    }
+
+    private void goHome() {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).openHome();
+        }
     }
 
     private void savePerson() {
@@ -93,10 +96,8 @@ public class AddPersonFragment extends Fragment implements ToolbarConfig {
                 .collection("persons")
                 .add(data)
                 .addOnSuccessListener(r -> {
-                    Toast.makeText(getContext(), "Person gespeichert ", Toast.LENGTH_SHORT).show();
-                    if (requireActivity().getSupportFragmentManager().getBackStackEntryCount() > 0) {
-                        requireActivity().getSupportFragmentManager().popBackStack();
-                    }
+                    Toast.makeText(getContext(), "Person gespeichert ✅", Toast.LENGTH_SHORT).show();
+                    goHome();
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(getContext(), "Fehler: " + e.getMessage(), Toast.LENGTH_LONG).show()
