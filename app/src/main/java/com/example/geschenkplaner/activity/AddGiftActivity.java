@@ -1,4 +1,5 @@
 package com.example.geschenkplaner.activity;
+
 import com.example.geschenkplaner.MainActivity;
 
 import android.content.Intent;
@@ -38,7 +39,7 @@ public class AddGiftActivity extends AppCompatActivity {
     private TextInputLayout tilTitle;
     private TextInputEditText etTitle;
 
-    private TextView tvPrice, tvLink, tvNote, tvStatus;
+    private TextView tvStatus;
 
     private TextInputLayout tilPrice, tilLink, tilNote;
     private TextInputEditText etPrice, etLink, etNote;
@@ -67,9 +68,6 @@ public class AddGiftActivity extends AppCompatActivity {
         tilTitle = findViewById(R.id.tilTitle);
         etTitle  = findViewById(R.id.etTitle);
 
-        tvPrice  = findViewById(R.id.tvPrice);
-        tvLink   = findViewById(R.id.tvLink);
-        tvNote   = findViewById(R.id.tvNote);
         tvStatus = findViewById(R.id.tvStatus);
 
         tilPrice = findViewById(R.id.tilPrice);
@@ -83,7 +81,7 @@ public class AddGiftActivity extends AppCompatActivity {
         bottomBar = findViewById(R.id.bottomBar);
 
         findViewById(R.id.btnUploadImage).setOnClickListener(v ->
-                Toast.makeText(this, "Bild-Upload kommt später 🙂", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Bild-Upload kommt später ", Toast.LENGTH_SHORT).show()
         );
 
         findViewById(R.id.btnMarkBought).setOnClickListener(v -> { bought = true; renderStatus(); });
@@ -147,7 +145,7 @@ public class AddGiftActivity extends AppCompatActivity {
         FirestorePaths.gifts(uid, personId)
                 .add(data)
                 .addOnSuccessListener(r -> {
-                    Toast.makeText(this, "Geschenk gespeichert ✅", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(this, "Geschenk gespeichert ", Toast.LENGTH_SHORT).show();
                     finish();
                 })
                 .addOnFailureListener(e ->

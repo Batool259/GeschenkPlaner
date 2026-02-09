@@ -41,7 +41,6 @@
                     android:padding="16dp"
                     android:gravity="center">
 
-                    <!-- Preview-Kreis -->
                     <com.google.android.material.imageview.ShapeableImageView
                         android:id="@+id/imgGiftPreview"
                         android:layout_width="84dp"
@@ -99,25 +98,18 @@
                             android:inputType="textCapSentences"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
-                    <TextView
-                        android:id="@+id/tvPrice"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Preis: —"
-                        android:paddingVertical="10dp"/>
-
+                    <!-- Preis -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilPrice"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="8dp"
+                        android:hint="Preis (z.B. 39,99)">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etPrice"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Preis (z.B. 39.99)"
                             android:inputType="numberDecimal"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -127,25 +119,19 @@
                         android:alpha="0.15"
                         android:background="@android:color/black"/>
 
-                    <TextView
-                        android:id="@+id/tvLink"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Link: —"
-                        android:paddingVertical="10dp"/>
-
+                    <!-- Link -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilLink"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="8dp"
+                        android:hint="Link">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etLink"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Link"/>
+                            android:inputType="textUri"/>
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <View
@@ -154,25 +140,18 @@
                         android:alpha="0.15"
                         android:background="@android:color/black"/>
 
-                    <TextView
-                        android:id="@+id/tvNote"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Notiz: —"
-                        android:paddingVertical="10dp"/>
-
+                    <!-- Notiz -->
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/tilNote"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:visibility="gone"
-                        android:layout_marginBottom="8dp">
+                        android:layout_marginBottom="8dp"
+                        android:hint="Notiz">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/etNote"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:hint="Notiz"
                             android:minLines="2"
                             android:inputType="textMultiLine"/>
                     </com.google.android.material.textfield.TextInputLayout>
