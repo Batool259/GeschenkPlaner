@@ -24,6 +24,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 
 import java.util.ArrayList;
+import java.util.Locale;
 
 public class PersonDetailActivity extends AppCompatActivity {
 
@@ -45,7 +46,6 @@ public class PersonDetailActivity extends AppCompatActivity {
 
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
@@ -208,9 +208,14 @@ public class PersonDetailActivity extends AppCompatActivity {
             holder.bind(row);
 
             holder.itemView.setOnClickListener(v -> {
+                if (row.id == null || row.id.trim().isEmpty()) {
+                    Toast.makeText(PersonDetailActivity.this, "giftId fehlt", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
                 Intent i = new Intent(PersonDetailActivity.this, GiftDetailActivity.class);
-                i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
                 i.putExtra(GiftDetailActivity.EXTRA_PERSON_ID, personId);
+                i.putExtra(GiftDetailActivity.EXTRA_GIFT_ID, row.id);
                 startActivity(i);
             });
         }
@@ -239,9 +244,13 @@ public class PersonDetailActivity extends AppCompatActivity {
         void bind(GiftRow row) {
             tvTitle.setText(row.title);
             tvNote.setText(row.bought ? "Gekauft ✅" : "Geplant");
-            chipPrice.setText("€ " + (row.price != null ? row.price : "—"));
 
-            // Bild-Logik: imageUrl -> Kreis füllen, sonst Geschenk-Icon
+            if (row.price != null) {
+                chipPrice.setText(String.format(Locale.GERMANY, "€ %.2f", row.price));
+            } else {
+                chipPrice.setText("€ —");
+            }
+
             if (row.imageUrl != null && !row.imageUrl.trim().isEmpty()) {
                 Glide.with(itemView.getContext())
                         .load(row.imageUrl)

@@ -15,12 +15,12 @@
         <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".LoginActivity" android:exported="false" />
         <activity android:name=".RegisterActivity" android:exported="false" />
-        <activity android:name=".PersonDetailActivity" />
-        <activity android:name=".AddGiftActivity" />
-        <activity android:name=".GiftDetailActivity" />
-        <activity android:name=".EditGiftActivity" />
 
-        <!-- Start-Screen (Router) -->
+        <activity android:name=".PersonDetailActivity" android:exported="false" />
+        <activity android:name=".AddGiftActivity" android:exported="false" />
+        <activity android:name=".GiftDetailActivity" android:exported="false" />
+        <activity android:name=".EditGiftActivity" android:exported="false" />
+
         <activity
             android:name=".StartActivity"
             android:exported="true">
@@ -31,6 +31,5 @@
         </activity>
 
     </application>
-
 
 </manifest>

@@ -3,6 +3,7 @@ package com.example.geschenkplaner;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -19,6 +20,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.auth.FirebaseAuth;
 
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 public class GiftDetailActivity extends AppCompatActivity {
@@ -43,8 +45,8 @@ public class GiftDetailActivity extends AppCompatActivity {
 
     private String imageUrl = ""; // Firestore Feld: "imageUrl"
 
-    // Java-kompatibel: Bild aus Galerie/Dateien wählen (keine extra Permission nötig).
-    // Quelle: Activity Result API / GetContent: https://developer.android.com/training/basics/intents/result
+    // Java-kompatibel: System-Picker (GetContent). Kann null liefern, wenn User abbricht.
+    // Quelle: https://developer.android.com/training/basics/intents/result
     private final ActivityResultLauncher<String> photoPicker =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri == null) return;
@@ -66,38 +68,56 @@ public class GiftDetailActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
-        personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
-        giftId = getIntent().getStringExtra(EXTRA_GIFT_ID);
-        if (personId == null || giftId == null) { finish(); return; }
+        // Extras robust lesen
+        Intent intent = getIntent();
+        personId = intent.getStringExtra(EXTRA_PERSON_ID);
+        giftId = intent.getStringExtra(EXTRA_GIFT_ID);
 
-        if (FirebaseAuth.getInstance().getCurrentUser() == null) { finish(); return; }
+        if (personId == null || personId.trim().isEmpty() || giftId == null || giftId.trim().isEmpty()) {
+            Toast.makeText(this, "Route fehlerhaft: personId/giftId fehlt", Toast.LENGTH_LONG).show();
+            finish();
+            return;
+        }
+
+        if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            finish();
+            return;
+        }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
         ivGiftImage = findViewById(R.id.ivGiftImage);
 
         tvTitle = findViewById(R.id.tvTitle);
         tvPrice = findViewById(R.id.tvPrice);
-        tvLink  = findViewById(R.id.tvLink);
-        tvNote  = findViewById(R.id.tvNote);
-        tvStatus= findViewById(R.id.tvStatus);
+        tvLink = findViewById(R.id.tvLink);
+        tvNote = findViewById(R.id.tvNote);
+        tvStatus = findViewById(R.id.tvStatus);
 
-        findViewById(R.id.btnPickImage).setOnClickListener(v -> pickFromGallery());
-        findViewById(R.id.btnImageUrl).setOnClickListener(v -> askForImageUrl());
+        // WICHTIG: Buttons sind ggf. nicht in jedem Layout vorhanden -> null-check, sonst Crash.
+        // findViewById kann null liefern: https://developer.android.com/reference/android/app/Activity#findViewById(int)
+        View pickBtn = findViewById(R.id.btnPickImage);
+        if (pickBtn != null) pickBtn.setOnClickListener(v -> pickFromGallery());
 
-        findViewById(R.id.btnEdit).setOnClickListener(v -> {
-            Intent i = new Intent(this, EditGiftActivity.class);
-            i.putExtra(EditGiftActivity.EXTRA_PERSON_ID, personId);
-            i.putExtra(EditGiftActivity.EXTRA_GIFT_ID, giftId);
-            startActivityForResult(i, REQ_EDIT_GIFT);
-        });
+        View urlBtn = findViewById(R.id.btnImageUrl);
+        if (urlBtn != null) urlBtn.setOnClickListener(v -> askForImageUrl());
 
-        findViewById(R.id.btnDeleteGift).setOnClickListener(v -> deleteGift());
+        View editBtn = findViewById(R.id.btnEdit);
+        if (editBtn != null) {
+            editBtn.setOnClickListener(v -> {
+                Intent i = new Intent(this, EditGiftActivity.class);
+                i.putExtra(EditGiftActivity.EXTRA_PERSON_ID, personId);
+                i.putExtra(EditGiftActivity.EXTRA_GIFT_ID, giftId);
+                startActivityForResult(i, REQ_EDIT_GIFT);
+            });
+        }
+
+        View deleteBtn = findViewById(R.id.btnDeleteGift);
+        if (deleteBtn != null) deleteBtn.setOnClickListener(v -> deleteGift());
 
         loadGift();
     }
 
     private void pickFromGallery() {
-        // Öffnet System-Picker (Bilder). Quelle: https://developer.android.com/training/basics/intents/result
         photoPicker.launch("image/*");
     }
 
@@ -123,10 +143,13 @@ public class GiftDetailActivity extends AppCompatActivity {
     }
 
     private void showImage(String anyUriOrUrl) {
+        if (ivGiftImage == null) return;
+
         if (anyUriOrUrl == null || anyUriOrUrl.trim().isEmpty()) {
             ivGiftImage.setImageResource(android.R.drawable.ic_menu_gallery);
             return;
         }
+
         Glide.with(this)
                 .load(anyUriOrUrl)
                 .centerCrop()
@@ -144,14 +167,16 @@ public class GiftDetailActivity extends AppCompatActivity {
     }
 
     private void render() {
-        tvTitle.setText(title);
+        if (tvTitle != null) tvTitle.setText(title);
 
-        if (price != null) tvPrice.setText("Preis: " + String.format("€ %.2f", price));
-        else tvPrice.setText("Preis: —");
+        if (tvPrice != null) {
+            if (price != null) tvPrice.setText(String.format(Locale.GERMANY, "Preis: € %.2f", price));
+            else tvPrice.setText("Preis: —");
+        }
 
-        tvLink.setText("Link: " + (!link.trim().isEmpty() ? link : "—"));
-        tvNote.setText("Notiz: " + (!note.trim().isEmpty() ? note : "—"));
-        tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
+        if (tvLink != null) tvLink.setText("Link: " + (!link.trim().isEmpty() ? link : "—"));
+        if (tvNote != null) tvNote.setText("Notiz: " + (!note.trim().isEmpty() ? note : "—"));
+        if (tvStatus != null) tvStatus.setText("Status: " + (bought ? "Gekauft ✅" : "Geplant"));
 
         showImage(imageUrl);
     }
@@ -160,7 +185,11 @@ public class GiftDetailActivity extends AppCompatActivity {
         FirestorePaths.gift(uid, personId, giftId)
                 .get()
                 .addOnSuccessListener(doc -> {
-                    if (!doc.exists()) { finish(); return; }
+                    if (!doc.exists()) {
+                        Toast.makeText(this, "Geschenk nicht gefunden", Toast.LENGTH_SHORT).show();
+                        finish();
+                        return;
+                    }
 
                     title = doc.getString("title") != null ? doc.getString("title") : "—";
                     price = doc.getDouble("price");
