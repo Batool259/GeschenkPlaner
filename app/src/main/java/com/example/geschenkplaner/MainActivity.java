@@ -14,6 +14,7 @@ import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
 import com.example.geschenkplaner.Fragments.ToolbarConfig;
+import com.example.geschenkplaner.activity.LoginActivity;
 import com.google.android.material.appbar.MaterialToolbar;
 import com.google.firebase.auth.FirebaseAuth;
 
