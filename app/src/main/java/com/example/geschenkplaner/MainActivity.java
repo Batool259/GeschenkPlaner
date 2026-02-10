@@ -20,9 +20,9 @@ import com.google.firebase.auth.FirebaseAuth;
 
 public class MainActivity extends AppCompatActivity {
 
-    private MaterialToolbar toolbar;
+    private MaterialToolbar toolbar; // Obere Leiste (Titel + Menü)
 
-    // Muss exakt zu den 4 Unterseiten passen
+    // Labels um gezielt ein Fragment zu öffnen (z.B. per Intent von anderen Activities)
     private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
     private static final String FRAG_HOME = "home";
     private static final String FRAG_ADD_PERSON = "add_person";
@@ -33,6 +33,7 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        // Wenn nicht eingeloggt -> direkt zur LoginActivity und zurück-Stack leeren
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Intent i = new Intent(this, LoginActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
@@ -41,40 +42,45 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main); // Main-Layout mit Fragment-Container
 
-        toolbar = findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        toolbar = findViewById(R.id.toolbar); // Toolbar aus Layout holen
+        setSupportActionBar(toolbar); // Toolbar als ActionBar nutzen
 
+        // Kein Zurück-Pfeil in der MainActivity
         toolbar.setNavigationIcon(null);
         toolbar.setNavigationOnClickListener(null);
 
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false); // Up-Button aus
         }
 
+        // Wenn sich das Fragment ändert -> Toolbar-Titel neu setzen
         getSupportFragmentManager()
                 .addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
 
         if (savedInstanceState == null) {
-            // Neu: Startfragment kann per Intent kommen
+            // Beim ersten Start: Fragment ggf. per Intent auswählen
             handleStartNavigation(getIntent());
         } else {
+            // Bei Rotation Titel passend zum aktuellen Fragment setzen
             applyToolbarFromCurrentFragment();
         }
     }
 
-    // Neu: wenn MainActivity schon existiert (SINGLE_TOP) kommt hier das neue Intent an
+    // Kommt, wenn MainActivity schon läuft und ein neues Intent reinkommt
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent);
-        handleStartNavigation(intent);
+        setIntent(intent); // Intent aktualisieren, damit getIntent() stimmt
+        handleStartNavigation(intent); // Direkt zum gewünschten Fragment springen
     }
 
     private void handleStartNavigation(Intent intent) {
+        // Liest, welches Fragment geöffnet werden soll
         String target = intent != null ? intent.getStringExtra(EXTRA_OPEN_FRAGMENT) : null;
 
+        // Je nach Ziel-String das passende Fragment öffnen
         if (FRAG_ADD_PERSON.equals(target)) {
             replaceFragment(new AddPersonFragment());
         } else if (FRAG_CALENDAR.equals(target)) {
@@ -82,24 +88,27 @@ public class MainActivity extends AppCompatActivity {
         } else if (FRAG_SETTINGS.equals(target)) {
             replaceFragment(new SettingsFragment());
         } else {
-            replaceFragment(new HomeFragment());
+            replaceFragment(new HomeFragment()); // Standard: Home
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+        // Menü oben rechts laden
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Reagiert auf Klicks im Toolbar-Menü
         int id = item.getItemId();
 
         if (id == R.id.action_menu) {
-            return true;
+            return true; // Falls das nur ein „Platzhalter“-Item ist
         }
 
+        // Navigation zwischen den 4 Hauptseiten (Fragments)
         if (id == R.id.menu_home) {
             replaceFragment(new HomeFragment());
             return true;
@@ -114,26 +123,32 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        return super.onOptionsItemSelected(item);
+        return super.onOptionsItemSelected(item); // Standard-Fall
     }
 
     private void replaceFragment(Fragment fragment) {
+        // Tauscht das aktuell sichtbare Fragment im Container aus
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
-                .runOnCommit(this::applyToolbarFromCurrentFragment)
+                .runOnCommit(this::applyToolbarFromCurrentFragment) // Titel nach dem Wechsel setzen
                 .commit();
     }
 
     private void applyToolbarFromCurrentFragment() {
+        // Holt das aktuell sichtbare Fragment aus dem Container
         Fragment f = getSupportFragmentManager()
                 .findFragmentById(R.id.fragmentContainer);
 
+        // Standard-Titel, falls Fragment keinen eigenen liefert
         String title = "GeschenkPlaner";
+
+        // Wenn Fragment ToolbarConfig implementiert -> Fragment bestimmt den Titel selbst
         if (f instanceof ToolbarConfig) {
             title = ((ToolbarConfig) f).getToolbarTitle();
         }
 
+        // Titel in die ActionBar/Toolbar schreiben
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -143,11 +158,12 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void navigateToAddPerson() {
+        // Öffnet AddPerson
         replaceFragment(new AddPersonFragment());
     }
 
-    // ✅ Neu: von überall zurück zur Home
     public void openHome() {
+        // Öffnet Home von überall innerhalb der MainActivity
         replaceFragment(new HomeFragment());
     }
 }
