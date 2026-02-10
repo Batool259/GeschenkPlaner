@@ -23,27 +23,33 @@ import java.util.Locale;
 
 public class GiftDetailActivity extends AppCompatActivity {
 
+    // Intent-Keys: diese Activity erwartet Person + Geschenk-ID.
     public static final String EXTRA_PERSON_ID = "personId";
     public static final String EXTRA_GIFT_ID = "giftId";
 
+    // Request-Code für startActivityForResult -> EditGiftActivity.
     private static final int REQ_EDIT_GIFT = 1001;
 
+    // Extra + Konstanten: Navigation zurück zur MainActivity (welcher Tab soll geöffnet werden).
     private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
     private static final String FRAG_HOME = "home";
     private static final String FRAG_ADD_PERSON = "add_person";
     private static final String FRAG_CALENDAR = "calendar";
     private static final String FRAG_SETTINGS = "settings";
 
+    // uid = eingeloggter Firebase-User; personId/giftId = Kontext für Firestore-Pfade.
     private String uid;
     private String personId;
     private String giftId;
 
+    // UI-Elemente (Detailansicht).
     private ImageView ivGiftImage;
     private EditText etName, etPrice, etLink, etNote, etStatus;
 
+    // „Model“-Daten, die aus Firestore geladen und dann in render() angezeigt werden.
     private String title = "";
     private Double price = null;
-    private String link = "";     // Website-Link
+    private String link = "";     // Website-Link (separat vom Bild)
     private String note = "";
     private boolean bought = false;
     private String imageUrl = "";
@@ -53,12 +59,14 @@ public class GiftDetailActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gift_detail);
 
+        // Toolbar oben einrichten (inkl. Zurückpfeil).
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        // IDs aus dem Intent holen (ohne die kann man das Geschenk nicht laden).
         Intent intent = getIntent();
         personId = intent.getStringExtra(EXTRA_PERSON_ID);
         giftId = intent.getStringExtra(EXTRA_GIFT_ID);
@@ -69,12 +77,14 @@ public class GiftDetailActivity extends AppCompatActivity {
             return;
         }
 
+        // Sicherheit: ohne Login keine Details anzeigen.
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             finish();
             return;
         }
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
+        // Views verbinden.
         ivGiftImage = findViewById(R.id.ivGiftImage);
         if (ivGiftImage != null) ivGiftImage.setAlpha(1f);
 
@@ -84,16 +94,18 @@ public class GiftDetailActivity extends AppCompatActivity {
         etNote = findViewById(R.id.etNote);
         etStatus = findViewById(R.id.etStatus);
 
+        // Detailansicht: Felder sollen hier nicht bearbeitbar sein.
         makeReadOnly(etName);
         makeReadOnly(etPrice);
 
-        // Link: NICHT komplett deaktivieren, weil er klickbar sein soll
+        // Link-Feld: nicht komplett deaktivieren, weil es anklickbar sein soll.
         makeReadOnlyButClickable(etLink);
         etLink.setOnClickListener(v -> openWebsiteLink(link));
 
         makeReadOnly(etNote);
         makeReadOnly(etStatus);
 
+        // „Bearbeiten“ öffnet EditGiftActivity; Ergebnis kommt über onActivityResult zurück.
         findViewById(R.id.btnEdit).setOnClickListener(v -> {
             Intent i = new Intent(this, EditGiftActivity.class);
             i.putExtra(EditGiftActivity.EXTRA_PERSON_ID, personId);
@@ -101,11 +113,17 @@ public class GiftDetailActivity extends AppCompatActivity {
             startActivityForResult(i, REQ_EDIT_GIFT);
         });
 
+        // Löschen-Button entfernt das Dokument in Firestore.
         findViewById(R.id.btnDeleteGift).setOnClickListener(v -> deleteGift());
 
+        // Geschenk laden (Firestore) und danach rendern.
         loadGift();
     }
 
+    /**
+     * Macht ein EditText komplett „nur Anzeige“:
+     * - nicht fokussierbar, kein Cursor, keine Tastatur-Eingabe.
+     */
     private void makeReadOnly(EditText et) {
         if (et == null) return;
         et.setFocusable(false);
@@ -116,6 +134,11 @@ public class GiftDetailActivity extends AppCompatActivity {
         et.setKeyListener(null);
     }
 
+    /**
+     * Read-only, aber klickbar (für Links):
+     * - keine Eingabe möglich
+     * - OnClick funktioniert trotzdem
+     */
     private void makeReadOnlyButClickable(EditText et) {
         if (et == null) return;
         et.setFocusable(false);
@@ -126,6 +149,10 @@ public class GiftDetailActivity extends AppCompatActivity {
         et.setKeyListener(null);
     }
 
+    /**
+     * Öffnet MainActivity und gibt mit, welcher Tab/Fragment angezeigt werden soll.
+     * Flags vermeiden doppelte MainActivities.
+     */
     private void openMainFragment(String which) {
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(EXTRA_OPEN_FRAGMENT, which);
@@ -133,6 +160,10 @@ public class GiftDetailActivity extends AppCompatActivity {
         startActivity(i);
     }
 
+    /**
+     * Lädt das Geschenk-Dokument aus Firestore (per uid/personId/giftId) und speichert die Werte
+     * in die Felder title/price/link/note/bought/imageUrl, danach render().
+     */
     private void loadGift() {
         FirestorePaths.gift(uid, personId, giftId)
                 .get()
@@ -143,6 +174,7 @@ public class GiftDetailActivity extends AppCompatActivity {
                         return;
                     }
 
+                    // Defensive Reads: Firestore kann null liefern -> wir setzen dann leere Defaults.
                     title = doc.getString("title") != null ? doc.getString("title") : "";
                     price = doc.getDouble("price");
                     link = doc.getString("link") != null ? doc.getString("link") : "";
@@ -157,6 +189,10 @@ public class GiftDetailActivity extends AppCompatActivity {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Schreibt die geladenen Daten in die UI (Textfelder) und zeigt das Bild.
+     * Locale.GERMANY sorgt für deutsches Zahlenformat (z.B. 12,34 wird korrekt formatiert).
+     */
     private void render() {
         if (etName != null) etName.setText(title);
 
@@ -172,6 +208,10 @@ public class GiftDetailActivity extends AppCompatActivity {
         showImage(imageUrl);
     }
 
+    /**
+     * Macht aus „example.com“ -> „https://example.com“
+     * Damit ACTION_VIEW nicht an fehlendem Schema scheitert.
+     */
     private String normalizeUrl(String raw) {
         if (raw == null) return "";
         String s = raw.trim();
@@ -180,6 +220,10 @@ public class GiftDetailActivity extends AppCompatActivity {
         return "https://" + s;
     }
 
+    /**
+     * Öffnet den gespeicherten Website-Link im Browser (Intent.ACTION_VIEW).
+     * Falls nichts gespeichert oder Fehler: Toast anzeigen.
+     */
     private void openWebsiteLink(String rawUrl) {
         String url = normalizeUrl(rawUrl);
         if (url.isEmpty()) {
@@ -195,6 +239,11 @@ public class GiftDetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Bildanzeige:
+     * - leer: Platzhalter-Icon + leicht transparent
+     * - sonst: Glide lädt Uri/URL in die ImageView.
+     */
     private void showImage(String uriOrUrl) {
         if (ivGiftImage == null) return;
 
@@ -213,6 +262,10 @@ public class GiftDetailActivity extends AppCompatActivity {
                 .into(ivGiftImage);
     }
 
+    /**
+     * Löscht das Geschenk-Dokument aus Firestore.
+     * Bei Erfolg: Toast + Activity schließen.
+     */
     private void deleteGift() {
         FirestorePaths.gift(uid, personId, giftId)
                 .delete()
@@ -224,6 +277,13 @@ public class GiftDetailActivity extends AppCompatActivity {
                         Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show());
     }
 
+    /**
+     * Kommt zurück, wenn EditGiftActivity fertig ist.
+     * Wenn RESULT_OK: neu laden, damit Änderungen sofort angezeigt werden.
+     *
+     * Hinweis: startActivityForResult/onActivityResult ist inzwischen „legacy“,
+     * aber solange ihr es so nutzt, ist das Verhalten korrekt. ([developer.android.com](https://developer.android.com/training/basics/intents/result?utm_source=chatgpt.com))
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -232,12 +292,20 @@ public class GiftDetailActivity extends AppCompatActivity {
         }
     }
 
+    /**
+     * Baut das Menü (Toolbar-Menü wird aus XML geladen).
+     */
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    /**
+     * Menü-Klicks:
+     * - android.R.id.home = Zurückpfeil
+     * - Rest: Navigation in MainActivity (Tabs/Fragmente)
+     */
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == android.R.id.home) {
