@@ -38,16 +38,20 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
+
 public class CalendarFragment extends Fragment implements ToolbarConfig {
+
 
     @Override
     public String getToolbarTitle() {
         return "Kalender";
     }
 
+    // UI-Elemente
     private MaterialCalendarView calendarView;
     private TextView tvToggleCalendar;
     private RecyclerView rvEvents;
+
 
     private EventAdapter adapter;
 
@@ -59,6 +63,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
 
     private final Set<CalendarDay> markedDays = new HashSet<>();
 
+    // Layout für das Fragment laden
     @Nullable
     @Override
     public View onCreateView(
@@ -69,6 +74,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         return inflater.inflate(R.layout.fragment_calendar, container, false);
     }
 
+
     @Override
     public void onViewCreated(
             @NonNull View v,
@@ -76,31 +82,37 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
     ) {
         super.onViewCreated(v, savedInstanceState);
 
+        // Views aus dem Layout holen
         calendarView = v.findViewById(R.id.calendarView);
         tvToggleCalendar = v.findViewById(R.id.tvToggleCalendar);
         rvEvents = v.findViewById(R.id.rvEvents);
 
+        //  ohne Login keine Kalenderdaten laden
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
             Toast.makeText(getContext(), "Bitte einloggen", Toast.LENGTH_SHORT).show();
             return;
         }
 
+        // UID speichern, damit Firestore-Pfade unter
         uid = FirebaseAuth.getInstance().getCurrentUser().getUid();
+
 
         adapter = new EventAdapter();
         rvEvents.setLayoutManager(new LinearLayoutManager(requireContext()));
         rvEvents.setAdapter(adapter);
 
+        // Standard: heutiges Datum als ausgewähltes Datum setzen
         Calendar today = Calendar.getInstance();
         selectedDateKey = sdf.format(today.getTime());
 
         calendarView.setSelectedDate(CalendarDay.today());
         calendarView.setCurrentDate(CalendarDay.today());
 
-        loadEventsSorted();
-        loadMarkedDays();
+        // Daten laden:
+        loadEventsSorted();     // Events in Liste anzeigen (selected zuerst)
+        loadMarkedDays();      // Tage mit Events als Punkte markieren
 
-        // ✅ Toggle: Kalender aus-/einblenden
+        // Toggle: Kalender-Ansicht ein-/ausblenden
         tvToggleCalendar.setOnClickListener(x -> {
             if (calendarView.getVisibility() == View.VISIBLE) {
                 calendarView.setVisibility(View.GONE);
@@ -111,9 +123,10 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
             }
         });
 
-        // Klick auf Datum -> neu sortieren + Add Dialog
+
         calendarView.setOnDateChangedListener((widget, date, selected) -> {
             Calendar c = Calendar.getInstance();
+
             c.set(date.getYear(), date.getMonth() - 1, date.getDay());
             selectedDateKey = sdf.format(c.getTime());
 
@@ -122,7 +135,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         });
     }
 
-    // Events laden (selected oben, Rest darunter)
+
     private void loadEventsSorted() {
         FirestorePaths.events(uid)
                 .orderBy("dateKey")
@@ -136,15 +149,19 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                         String dateKey = d.getString("dateKey");
                         if (dateKey == null) continue;
 
+                        // Titel des Eintrags
                         String title = d.getString("text");
                         if (title == null || title.trim().isEmpty()) title = "—";
 
+                        // Optional: Personname (für Subtitle)
                         String subtitle = d.getString("personName");
                         if (subtitle == null) subtitle = "";
 
+                        // Anzeige im UI: Tag + Monatsname kurz
                         String day = "—";
                         String monthShort = "—";
 
+                        // dateKey soll "yyyy-MM-dd" sein -> daraus Tag/Monat extrahieren
                         if (dateKey.matches("\\d{4}-\\d{2}-\\d{2}")) {
                             String[] p = dateKey.split("-");
                             day = p[2];
@@ -152,13 +169,16 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                             int month = Integer.parseInt(p[1]);
                             String[] months = new DateFormatSymbols(Locale.GERMAN).getShortMonths();
                             monthShort = months[month - 1];
+
+                            // Monat schön formatieren (z.B. "Mär." -> groß anfangen)
                             if (monthShort != null && !monthShort.isEmpty()) {
                                 monthShort = monthShort.substring(0, 1).toUpperCase() + monthShort.substring(1);
                             }
                         }
 
+                        // Row-Objekt für RecyclerView bauen
                         EventRow row = new EventRow(
-                                d.getId(),
+                                d.getId(),   // Firestore-Dokument-ID
                                 day,
                                 monthShort,
                                 title,
@@ -166,14 +186,17 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                                 dateKey
                         );
 
+                        // Reihenfolge: selected Datum oben, Rest darunter
                         if (dateKey.equals(selectedDateKey)) selected.add(row);
                         else others.add(row);
                     }
 
+                    // Finale Liste: selected zuerst, dann others
                     List<EventRow> all = new ArrayList<>();
                     all.addAll(selected);
                     all.addAll(others);
 
+                    // Adapter aktualisieren -> UI aktualisiert sich
                     adapter.setItems(all);
                 })
                 .addOnFailureListener(e ->
@@ -181,14 +204,21 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 );
     }
 
-    // Add / Edit / Delete
+    /**
+     * Öffnet einen Dialog, um für das aktuell ausgewählte Datum einen Eintrag hinzuzufügen.
+     * - Text eingeben
+     * - optional eine Person auswählen (Spinner)
+     * - speichern -> Firestore /events
+     */
     private void showAddEventDialog() {
+        // Dialog-Layout laden
         View content = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_add_event, null, false);
 
         EditText et = content.findViewById(R.id.etEventText);
         android.widget.Spinner sp = content.findViewById(R.id.spPerson);
 
+        // Spinner-Liste vorbereiten: zuerst Platzhalter
         List<PersonOption> persons = new ArrayList<>();
         persons.add(new PersonOption("", "— Person auswählen —"));
 
@@ -198,6 +228,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         spAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         sp.setAdapter(spAdapter);
 
+        // Personen aus Firestore laden und in Spinner anzeigen
         FirestorePaths.persons(uid)
                 .get()
                 .addOnSuccessListener(qs -> {
@@ -211,23 +242,28 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                     spAdapter.notifyDataSetChanged();
                 });
 
+        // Dialog bauen
         new AlertDialog.Builder(requireContext())
                 .setTitle("Eintrag hinzufügen")
                 .setView(content)
                 .setPositiveButton("Speichern", (d, w) -> {
+                    // Text auslesen
                     String text = et.getText().toString().trim();
-                    if (TextUtils.isEmpty(text)) return;
+                    if (TextUtils.isEmpty(text)) return; // wenn leer, nichts speichern
+
 
                     PersonOption p = (PersonOption) sp.getSelectedItem();
 
+                    // Daten für Firestore bauen
                     Map<String, Object> data = new HashMap<>();
                     data.put("uid", uid);
-                    data.put("dateKey", selectedDateKey);
+                    data.put("dateKey", selectedDateKey); // Datum, zu dem der Eintrag gehört
                     data.put("text", text);
                     data.put("personId", p != null ? p.id : "");
                     data.put("personName", p != null ? p.name : "");
                     data.put("createdAt", Timestamp.now());
 
+                    // Eintrag speichern, danach Liste + Punkte aktualisieren
                     FirestorePaths.events(uid).add(data)
                             .addOnSuccessListener(x -> {
                                 loadEventsSorted();
@@ -238,6 +274,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 .show();
     }
 
+    //Dialog zum Bearbeiten eines vorhandenen Eintrags
     private void showEditEventDialog(EventRow row) {
         EditText et = new EditText(requireContext());
         et.setText(row.title);
@@ -246,7 +283,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 .setTitle("Eintrag bearbeiten")
                 .setView(et)
 
-                // ✅ Löschen direkt im Bearbeiten-Dialog (kein Longpress nötig)
+                // Löschen: Firestore-Dokument entfernen
                 .setNeutralButton("Löschen", (d, w) -> {
                     FirestorePaths.event(uid, row.id)
                             .delete()
@@ -276,21 +313,28 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
                 .show();
     }
 
-    // Dots
+    //Lädt alle Events und markiert deren Tage im Kalender (Punkte)
     private void loadMarkedDays() {
         FirestorePaths.events(uid)
                 .get()
                 .addOnSuccessListener(qs -> {
                     markedDays.clear();
+
                     for (QueryDocumentSnapshot d : qs) {
                         CalendarDay cd = parseCalendarDay(d.getString("dateKey"));
                         if (cd != null) markedDays.add(cd);
                     }
+
+                    // Decorators neu setzen, damit Punkte aktualisiert werden
                     calendarView.removeDecorators();
                     calendarView.addDecorator(new DotDecorator(markedDays));
                 });
     }
 
+    /**
+     * Hilfsmethode: macht aus "yyyy-MM-dd" ein CalendarDay-Objekt.
+     * Gibt null zurück, wenn das Format nicht passt.
+     */
     private CalendarDay parseCalendarDay(String dk) {
         try {
             String[] p = dk.split("-");
@@ -304,6 +348,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         }
     }
 
+    //markiert alle Tage in "dates" mit einem Punkt
     private static class DotDecorator implements DayViewDecorator {
         private final Set<CalendarDay> dates;
         DotDecorator(Set<CalendarDay> d) { dates = d; }
@@ -313,13 +358,17 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         }
 
         @Override public void decorate(DayViewFacade view) {
+            // Punkt (Dot) hinzufügen (Größe 8f, Farbe als Hex)
             view.addSpan(new DotSpan(8f, 0xFF7B61FF));
         }
     }
 
-    // RecyclerView
+
+    //Datenobjekt für einen Eintrag in der Liste
+
     private static class EventRow {
         final String id, day, month, title, subtitle, dateKey;
+
         EventRow(String id, String day, String month, String title, String subtitle, String dateKey) {
             this.id = id;
             this.day = day;
@@ -330,6 +379,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
         }
     }
 
+    //Adapter: verwaltet die Liste und bindet Daten an ViewHolder
     private class EventAdapter extends RecyclerView.Adapter<EventVH> {
         private final List<EventRow> items = new ArrayList<>();
 
@@ -352,8 +402,8 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
             EventRow r = items.get(i);
             h.bind(r);
 
+            // Klick auf Listeneintrag -> Bearbeiten/Löschen Dialog
             h.itemView.setOnClickListener(v -> showEditEventDialog(r));
-
         }
 
         @Override public int getItemCount() { return items.size(); }
@@ -374,6 +424,7 @@ public class CalendarFragment extends Fragment implements ToolbarConfig {
             tvDay.setText(r.day);
             tvMonth.setText(r.month);
             tvTitle.setText(r.title);
+
 
             if (r.subtitle != null && !r.subtitle.isEmpty()) {
                 tvSubtitle.setVisibility(View.VISIBLE);

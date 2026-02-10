@@ -1,6 +1,6 @@
 package com.example.geschenkplaner.activity;
-import com.example.geschenkplaner.MainActivity;
 
+import com.example.geschenkplaner.MainActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -30,36 +30,42 @@ import com.google.firebase.firestore.QueryDocumentSnapshot;
 import java.util.ArrayList;
 import java.util.Locale;
 
+
+
 public class PersonDetailActivity extends AppCompatActivity {
 
+    // Intent-Key: darüber wird die personId beim Start übergeben
     public static final String EXTRA_PERSON_ID = "personId";
 
+    // Navigation zurück zur MainActivity inkl. "welches Fragment soll geöffnet werden?"
     private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
     private static final String FRAG_HOME = "home";
     private static final String FRAG_ADD_PERSON = "add_person";
     private static final String FRAG_CALENDAR = "calendar";
     private static final String FRAG_SETTINGS = "settings";
 
+
     private String uid;
     private String personId;
-
     private TextView tvPersonName;
     private TextView tvBirthdayHint;
     private TextView tvPersonInitial;
-
     private GiftAdapterSimple adapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        // Layout für Personendetails laden
         setContentView(R.layout.activity_person_detail);
 
+        // Toolbar einrichten + Back-Pfeil aktivieren
         MaterialToolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        // ohne Login -> zurück zur LoginActivity
         FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
         if (user == null) {
             startActivity(new Intent(this, LoginActivity.class));
@@ -68,6 +74,7 @@ public class PersonDetailActivity extends AppCompatActivity {
         }
         uid = user.getUid();
 
+        // personId aus Intent holen (ohne personId kann nichts geladen werden)
         personId = getIntent().getStringExtra(EXTRA_PERSON_ID);
         if (personId == null || personId.trim().isEmpty()) {
             Toast.makeText(this, "personId fehlt", Toast.LENGTH_SHORT).show();
@@ -75,15 +82,18 @@ public class PersonDetailActivity extends AppCompatActivity {
             return;
         }
 
+        // UI-Referenzen holen
         tvPersonName = findViewById(R.id.tvPersonName);
         tvBirthdayHint = findViewById(R.id.tvBirthdayHint);
         tvPersonInitial = findViewById(R.id.tvPersonInitial);
+
 
         RecyclerView rv = findViewById(R.id.rvGifts);
         rv.setLayoutManager(new LinearLayoutManager(this));
         adapter = new GiftAdapterSimple();
         rv.setAdapter(adapter);
 
+        // FAB: neues Geschenk für diese Person hinzufügen
         FloatingActionButton fab = findViewById(R.id.fabAddGift);
         fab.setOnClickListener(v -> {
             Intent i = new Intent(this, AddGiftActivity.class);
@@ -91,6 +101,7 @@ public class PersonDetailActivity extends AppCompatActivity {
             startActivity(i);
         });
 
+        // Daten initial laden
         loadPerson();
         loadGifts();
     }
@@ -98,15 +109,20 @@ public class PersonDetailActivity extends AppCompatActivity {
     @Override
     protected void onResume() {
         super.onResume();
+        // Nach Rückkehr (z.B. nach Add/Edit Gift) Geschenke neu laden
         loadGifts();
     }
+
+    //Öffnet die MainActivity und sagt ihr, welches Fragment angezeigt werden soll.
 
     private void openMainFragment(String which) {
         Intent i = new Intent(this, MainActivity.class);
         i.putExtra(EXTRA_OPEN_FRAGMENT, which);
-        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP); //sorgt dafür, dass keine zweite MainActivity entsteht.
         startActivity(i);
     }
+
+    //Lädt die Personendaten aus Firestore und setzt Name/Geburtstag/Initial.
 
     private void loadPerson() {
         FirestorePaths.person(uid, personId)
@@ -118,24 +134,30 @@ public class PersonDetailActivity extends AppCompatActivity {
                         return;
                     }
 
+                    // Felder aus Firestore lesen
                     String name = doc.getString("name");
                     String birthday = doc.getString("birthday");
 
+                    // Name absichern (nie null/leer anzeigen)
                     String safeName = (name != null && !name.trim().isEmpty()) ? name.trim() : "—";
                     tvPersonName.setText(safeName);
 
+                    // Geburtstag setzen (oder Platzhalter)
                     if (birthday != null && !birthday.trim().isEmpty()) {
                         tvBirthdayHint.setText("🎂 Geburtstag: " + birthday.trim());
                     } else {
                         tvBirthdayHint.setText("🎂 Geburtstag: —");
                     }
 
+                    // Initial (erster Buchstabe) anzeigen
                     tvPersonInitial.setText(getInitial(safeName));
                 })
                 .addOnFailureListener(e ->
                         Toast.makeText(this, "Fehler Person: " + e.getMessage(), Toast.LENGTH_LONG).show()
                 );
     }
+
+    //Hilfsfunktion: gibt den ersten Buchstaben (groß) zurück, sonst "?".
 
     private String getInitial(String name) {
         if (name == null) return "?";
@@ -144,18 +166,22 @@ public class PersonDetailActivity extends AppCompatActivity {
         return ("" + Character.toUpperCase(n.charAt(0)));
     }
 
+    //Lädt alle Geschenke der Person aus Firestore.
+
     private void loadGifts() {
         FirestorePaths.gifts(uid, personId)
                 .get()
                 .addOnSuccessListener(qs -> {
                     ArrayList<GiftRow> list = new ArrayList<>();
 
+                    // Query-Ergebnisse in eigene Datenstruktur umwandeln
                     for (QueryDocumentSnapshot doc : qs) {
                         String id = doc.getId();
                         String title = doc.getString("title");
                         Double price = doc.getDouble("price");
                         Boolean bought = doc.getBoolean("bought");
 
+                        // Bild-URL optional
                         String imageUrl = doc.getString("imageUrl");
                         if (imageUrl != null) imageUrl = imageUrl.trim();
                         if (imageUrl != null && imageUrl.isEmpty()) imageUrl = null;
@@ -169,6 +195,7 @@ public class PersonDetailActivity extends AppCompatActivity {
                         ));
                     }
 
+                    // Liste in Adapter setzen -> UI aktualisiert sich
                     adapter.setItems(list);
                 })
                 .addOnFailureListener(e ->
@@ -176,23 +203,26 @@ public class PersonDetailActivity extends AppCompatActivity {
                 );
     }
 
+    // Toolbar-Menü setzen
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    // Klicks auf Toolbar-Menü behandeln
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        // Back-Pfeil in Toolbar -> Activity schließen
         if (item.getItemId() == android.R.id.home) {
             finish();
             return true;
         }
 
         int id = item.getItemId();
-
         if (id == R.id.action_menu) return true;
 
+        // Navigation zurück zur MainActivity mit Ziel-Fragment
         if (id == R.id.menu_home) {
             openMainFragment(FRAG_HOME);
             return true;
@@ -210,7 +240,8 @@ public class PersonDetailActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    // ---- Simple Adapter ----
+
+    //Kleines Datenobjekt für eine Zeile in der Geschenk-Liste
     private static class GiftRow {
         final String id;
         final String title;
@@ -227,16 +258,20 @@ public class PersonDetailActivity extends AppCompatActivity {
         }
     }
 
+    //Adapter für RecyclerView: erzeugt ViewHolder und bindet GiftRow-Daten.
+
     private class GiftAdapterSimple extends RecyclerView.Adapter<GiftVH> {
 
         private final ArrayList<GiftRow> items = new ArrayList<>();
 
+        // Neue Liste setzen und RecyclerView neu zeichnen
         void setItems(ArrayList<GiftRow> list) {
             items.clear();
             items.addAll(list);
             notifyDataSetChanged();
         }
 
+        // ViewHolder erzeugen
         @NonNull
         @Override
         public GiftVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -244,11 +279,13 @@ public class PersonDetailActivity extends AppCompatActivity {
             return new GiftVH(v);
         }
 
+
         @Override
         public void onBindViewHolder(@NonNull GiftVH holder, int position) {
             GiftRow row = items.get(position);
             holder.bind(row);
 
+            // Klick auf Geschenk -> öffnet GiftDetailActivity
             holder.itemView.setOnClickListener(v -> {
                 if (row.id == null || row.id.trim().isEmpty()) {
                     Toast.makeText(PersonDetailActivity.this, "giftId fehlt", Toast.LENGTH_SHORT).show();
@@ -262,11 +299,13 @@ public class PersonDetailActivity extends AppCompatActivity {
             });
         }
 
+        // Anzahl der Elemente
         @Override
         public int getItemCount() {
             return items.size();
         }
     }
+
 
     private static class GiftVH extends RecyclerView.ViewHolder {
 
@@ -283,16 +322,19 @@ public class PersonDetailActivity extends AppCompatActivity {
             chipPrice = itemView.findViewById(R.id.chipPrice);
         }
 
+        // UI-Zeile mit GiftRow-Daten füllen
         void bind(GiftRow row) {
             tvTitle.setText(row.title);
             tvNote.setText(row.bought ? "Gekauft ✅" : "Geplant");
 
+            // Preis formatieren oder Platzhalter
             if (row.price != null) {
                 chipPrice.setText(String.format(Locale.GERMANY, "€ %.2f", row.price));
             } else {
                 chipPrice.setText("€ —");
             }
 
+            // Bild laden (Glide) oder Default-Icon setzen
             if (row.imageUrl != null && !row.imageUrl.trim().isEmpty()) {
                 Glide.with(itemView.getContext())
                         .load(row.imageUrl)
