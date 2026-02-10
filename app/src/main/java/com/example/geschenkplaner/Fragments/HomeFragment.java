@@ -1,10 +1,10 @@
 package com.example.geschenkplaner.Fragments;
 
-import android.app.AlertDialog;
-import android.content.Intent;
+import android.app.AlertDialog; // Dialoge für Bearbeiten/Löschen
+import android.content.Intent; // Für Activity-Wechsel
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextWatcher;
+import android.text.TextWatcher; // Reagiert auf Texteingaben
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,19 +14,19 @@ import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.PopupMenu;
-import androidx.fragment.app.Fragment;
+import androidx.appcompat.widget.PopupMenu; // 3-Punkte-Menü
+import androidx.fragment.app.Fragment; // Fragment = Teil eines Screens
 import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView; // Liste für viele Einträge
 
 import com.example.geschenkplaner.activity.PersonDetailActivity;
 import com.example.geschenkplaner.R;
 import com.example.geschenkplaner.data.FirestorePaths;
-import com.google.firebase.Timestamp;
+import com.google.firebase.Timestamp; // Zeitstempel für Firestore
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.ListenerRegistration;
+import com.google.firebase.firestore.ListenerRegistration; // Zum Abmelden des Listeners
 import com.google.firebase.firestore.Query;
 
 import java.util.ArrayList;
@@ -35,33 +35,35 @@ import java.util.List;
 import java.util.Map;
 
 public class HomeFragment extends Fragment implements ToolbarConfig {
+    // implements ToolbarConfig = dieses Fragment liefert einen Toolbar-Titel
 
     @Override
     public String getToolbarTitle() {
+        // Titel, der oben in der Toolbar angezeigt wird
         return "GeschenkPlaner";
     }
 
-    private FirebaseAuth auth;
-    private ListenerRegistration personsListener;
+    private FirebaseAuth auth; // Zugriff auf eingeloggten User
+    private ListenerRegistration personsListener; // Firestore Listener merken
 
-    private TextView tvGreeting;
-    private EditText etSearch;
-    private RecyclerView rvPersons;
-    private TextView tvEmpty;
+    private TextView tvGreeting; // Begrüßungstext
+    private EditText etSearch; // Suchfeld
+    private RecyclerView rvPersons; // Personenliste
+    private TextView tvEmpty; // Text wenn Liste leer ist
 
-    private final List<PersonRow> allItems = new ArrayList<>();
-    private final List<PersonRow> filteredItems = new ArrayList<>();
-    private PersonAdapter adapter;
+    private final List<PersonRow> allItems = new ArrayList<>(); // Alle Personen aus Firestore
+    private final List<PersonRow> filteredItems = new ArrayList<>(); // Gefilterte Personen
+    private PersonAdapter adapter; // Adapter für RecyclerView
 
-    // Wenn du Demo nicht mehr willst: auf false lassen und seedDemo-Block unten entfernen
-    private boolean demoSeededThisSession = false;
+    private boolean demoSeededThisSession = false; // Demo-Daten nur einmal pro Session
 
-    public HomeFragment() {}
+    public HomeFragment() {} // Leerer Konstruktor für Fragment
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        // Layout für dieses Fragment laden
         return inflater.inflate(R.layout.fragment_home, container, false);
     }
 
@@ -70,55 +72,64 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
                               @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        // Views aus dem Layout holen
         tvGreeting = view.findViewById(R.id.tvGreeting);
         etSearch = view.findViewById(R.id.etSearch);
         rvPersons = view.findViewById(R.id.rvPersons);
         tvEmpty = view.findViewById(R.id.tvEmpty);
 
-        auth = FirebaseAuth.getInstance();
+        auth = FirebaseAuth.getInstance(); // FirebaseAuth initialisieren
 
-        setGreeting();
+        setGreeting(); // Begrüßung setzen
 
-        adapter = new PersonAdapter(filteredItems,
+        adapter = new PersonAdapter(
+                filteredItems,
                 row -> {
+                    // Klick auf Person -> Detailansicht öffnen
                     Intent i = new Intent(requireContext(), PersonDetailActivity.class);
                     i.putExtra(PersonDetailActivity.EXTRA_PERSON_ID, row.id);
                     startActivity(i);
                 },
-                (anchorView, row) -> showRowMenu(anchorView, row)
+                (anchorView, row) -> showRowMenu(anchorView, row) // 3-Punkte-Menü öffnen
         );
 
-        rvPersons.setLayoutManager(new LinearLayoutManager(requireContext()));
-        rvPersons.setAdapter(adapter);
-
+        rvPersons.setLayoutManager(new LinearLayoutManager(requireContext())); // Normale Listenansicht
+        rvPersons.setAdapter(adapter); // Adapter setzen
 
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-            @Override public void onTextChanged(CharSequence s, int start, int before, int count) { filter(s.toString()); }
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Bei jeder Texteingabe Liste filtern
+                filter(s.toString());
+            }
             @Override public void afterTextChanged(Editable s) {}
         });
 
-        updateEmptyState();
+        updateEmptyState(); // Prüfen ob Liste leer ist
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        // Listener starten wenn Fragment sichtbar wird
         startPersonsListener();
     }
 
     @Override
     public void onStop() {
         super.onStop();
+        // Listener stoppen wenn Fragment nicht mehr sichtbar ist
         stopPersonsListener();
     }
 
     private void setGreeting() {
+        // Begrüßung abhängig vom eingeloggten User setzen
         FirebaseUser user = auth.getCurrentUser();
         if (user == null) {
             tvGreeting.setText("Hallo 👋");
             return;
         }
+
         String name = user.getDisplayName();
         if (name != null && !name.trim().isEmpty()) {
             tvGreeting.setText("Hallo, " + name + " 👋");
@@ -130,6 +141,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void startPersonsListener() {
+        // Sicherheit: alten Listener beenden
         stopPersonsListener();
 
         FirebaseUser user = auth.getCurrentUser();
@@ -144,12 +156,11 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         String uid = user.getUid();
 
         personsListener = FirestorePaths.persons(uid)
-                .orderBy("createdAt", Query.Direction.DESCENDING)
+                .orderBy("createdAt", Query.Direction.DESCENDING) // Neueste zuerst
                 .addSnapshotListener((snap, err) -> {
-                    allItems.clear();
+                    allItems.clear(); // Liste neu aufbauen
 
                     if (err != null || snap == null) {
-                        applyFiltered("");
                         tvEmpty.setText("Fehler beim Laden der Personen.");
                         updateEmptyState();
                         return;
@@ -161,6 +172,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
                         String note = doc.getString("note");
 
                         if (name == null || name.trim().isEmpty()) name = "(Ohne Name)";
+
                         allItems.add(new PersonRow(
                                 doc.getId(),
                                 name,
@@ -169,7 +181,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
                         ));
                     }
 
-                    // Demo seed: nur wenn wirklich leer
+                    // Demo-Daten nur wenn noch keine Personen existieren
                     if (!demoSeededThisSession && allItems.isEmpty()) {
                         demoSeededThisSession = true;
                         seedDemo(uid);
@@ -181,6 +193,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void stopPersonsListener() {
+        // Firestore Listener sauber entfernen
         if (personsListener != null) {
             personsListener.remove();
             personsListener = null;
@@ -188,42 +201,43 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void filter(String query) {
+        // Suchfilter anwenden
         applyFiltered(query);
         updateEmptyState();
     }
 
     private void applyFiltered(String query) {
-        filteredItems.clear();
+        filteredItems.clear(); // Gefilterte Liste neu aufbauen
         String q = query != null ? query.trim().toLowerCase() : "";
 
         if (q.isEmpty()) {
-            filteredItems.addAll(allItems);
+            filteredItems.addAll(allItems); // Keine Suche -> alles anzeigen
         } else {
             for (PersonRow p : allItems) {
                 if (p.name.toLowerCase().contains(q)) filteredItems.add(p);
             }
         }
 
-        adapter.notifyDataSetChanged();
+        adapter.notifyDataSetChanged(); // RecyclerView neu zeichnen
     }
 
     private void updateEmptyState() {
+        // Liste oder Leermeldung anzeigen
         boolean isEmpty = filteredItems.isEmpty();
         rvPersons.setVisibility(isEmpty ? View.GONE : View.VISIBLE);
         tvEmpty.setVisibility(isEmpty ? View.VISIBLE : View.GONE);
     }
 
-    // --- 3-Punkte Menü ---
     private void showRowMenu(View anchor, PersonRow row) {
+        // 3-Punkte-Menü anzeigen
         PopupMenu menu = new PopupMenu(requireContext(), anchor);
         menu.getMenuInflater().inflate(R.menu.person_row_menu, menu.getMenu());
 
         menu.setOnMenuItemClickListener(item -> {
-            int id = item.getItemId();
-            if (id == R.id.action_edit) {
+            if (item.getItemId() == R.id.action_edit) {
                 showEditDialog(row);
                 return true;
-            } else if (id == R.id.action_delete) {
+            } else if (item.getItemId() == R.id.action_delete) {
                 showDeleteDialog(row);
                 return true;
             }
@@ -234,7 +248,9 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void showEditDialog(PersonRow row) {
-        View content = LayoutInflater.from(requireContext()).inflate(R.layout.dialog_edit_person, null, false);
+        // Dialog zum Bearbeiten einer Person
+        View content = LayoutInflater.from(requireContext())
+                .inflate(R.layout.dialog_edit_person, null, false);
 
         EditText etName = content.findViewById(R.id.etEditName);
         EditText etBirthday = content.findViewById(R.id.etEditBirthday);
@@ -245,22 +261,16 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         etNote.setText(row.note);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle((row.name != null && !row.name.trim().isEmpty()) ? row.name.trim() : "Person bearbeiten")
+                .setTitle(row.name != null && !row.name.trim().isEmpty() ? row.name : "Person bearbeiten")
                 .setView(content)
                 .setPositiveButton("Speichern", (d, w) -> {
                     FirebaseUser user = auth.getCurrentUser();
                     if (user == null) return;
 
-                    String newName = etName.getText().toString().trim();
-                    String newBirthday = etBirthday.getText().toString().trim();
-                    String newNote = etNote.getText().toString().trim();
-
-                    if (newName.isEmpty()) newName = "(Ohne Name)";
-
                     Map<String, Object> update = new HashMap<>();
-                    update.put("name", newName);
-                    update.put("birthday", newBirthday);
-                    update.put("note", newNote);
+                    update.put("name", etName.getText().toString().trim());
+                    update.put("birthday", etBirthday.getText().toString().trim());
+                    update.put("note", etNote.getText().toString().trim());
                     update.put("updatedAt", Timestamp.now());
 
                     FirestorePaths.person(user.getUid(), row.id).update(update);
@@ -270,6 +280,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void showDeleteDialog(PersonRow row) {
+        // Sicherheitsabfrage vor dem Löschen
         new AlertDialog.Builder(requireContext())
                 .setTitle("Person löschen?")
                 .setMessage(row.name)
@@ -282,8 +293,8 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
                 .show();
     }
 
-    // --- Demo (optional) ---
     private void seedDemo(String uid) {
+        // Demo-Personen anlegen
         String[] demoNames = {"Patrick Schmidt", "Lena Müller", "Tom Braun"};
         String[] demoBirth = {"12.03.2003", "01.11.2002", "26.07.2003"};
 
@@ -298,8 +309,8 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         }
     }
 
-    // ---- RecyclerView ----
     private static class PersonRow {
+        // Datenobjekt für eine Person
         final String id;
         final String name;
         final String birthday;
@@ -313,21 +324,24 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         }
 
         String initial() {
-            String n = name != null ? name.trim() : "";
-            if (n.isEmpty()) return "?";
-            return ("" + Character.toUpperCase(n.charAt(0)));
+            // Ersten Buchstaben für Initiale zurückgeben
+            if (name == null || name.trim().isEmpty()) return "?";
+            return String.valueOf(Character.toUpperCase(name.trim().charAt(0)));
         }
     }
 
     private interface OnPersonClick {
+        // Callback für Klick auf Person
         void onClick(PersonRow row);
     }
 
     private interface OnMoreClick {
+        // Callback für Klick auf 3-Punkte
         void onMoreClick(View anchorView, PersonRow row);
     }
 
     private static class PersonAdapter extends RecyclerView.Adapter<PersonVH> {
+        // Adapter verbindet Personenliste mit RecyclerView
         private final List<PersonRow> data;
         private final OnPersonClick onClick;
         private final OnMoreClick onMoreClick;
@@ -341,6 +355,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         @NonNull
         @Override
         public PersonVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            // Layout für eine Zeile laden
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_person, parent, false);
             return new PersonVH(v);
@@ -348,6 +363,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
 
         @Override
         public void onBindViewHolder(@NonNull PersonVH holder, int position) {
+            // Daten an ViewHolder binden
             PersonRow row = data.get(position);
             holder.bind(row);
 
@@ -357,38 +373,31 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
 
         @Override
         public int getItemCount() {
-            return data.size();
+            return data.size(); // Anzahl der Einträge
         }
     }
 
     private static class PersonVH extends RecyclerView.ViewHolder {
-
+        // Hält die Views einer einzelnen Listenzeile
         private final TextView tvName;
         private final TextView tvInfo;
         private final TextView tvInitial;
         private final ImageButton btnMore;
 
-
-
-
         PersonVH(@NonNull View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.tvName);
             tvInfo = itemView.findViewById(R.id.tvInfo);
-
             tvInitial = itemView.findViewById(R.id.tvInitial);
             btnMore = itemView.findViewById(R.id.btnMore);
         }
 
         void bind(PersonRow row) {
+            // Daten in die Views setzen
             tvName.setText(row.name);
-
-            if (row.birthday == null || row.birthday.trim().isEmpty()) {
-                tvInfo.setText("Geburtstag: —");
-            } else {
-                tvInfo.setText("Geburtstag: " + row.birthday);
-            }
-
+            tvInfo.setText(row.birthday == null || row.birthday.isEmpty()
+                    ? "Geburtstag: —"
+                    : "Geburtstag: " + row.birthday);
             tvInitial.setText(row.initial());
         }
     }

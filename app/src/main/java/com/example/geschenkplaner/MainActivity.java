@@ -1,40 +1,64 @@
 package com.example.geschenkplaner;
 
+// Android-Imports für Navigation, Lifecycle und Menü
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 
+// AndroidX-Imports für Activity und Fragment-Handling
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
+// Eigene Fragmente (Unterseiten der App)
 import com.example.geschenkplaner.Fragments.AddPersonFragment;
 import com.example.geschenkplaner.Fragments.CalendarFragment;
 import com.example.geschenkplaner.Fragments.HomeFragment;
 import com.example.geschenkplaner.Fragments.SettingsFragment;
 import com.example.geschenkplaner.Fragments.ToolbarConfig;
+
+// Login-Activity für nicht eingeloggte User
 import com.example.geschenkplaner.activity.LoginActivity;
+
+// Material Toolbar
 import com.google.android.material.appbar.MaterialToolbar;
+
+// Firebase Auth zur Prüfung des Login-Status
 import com.google.firebase.auth.FirebaseAuth;
 
+/**
+ * MainActivity ist der Haupt-Container der App nach dem Login.
+ * Sie enthält die Toolbar und lädt je nach Menüauswahl unterschiedliche Fragmente
+ * (Home, Person hinzufügen, Kalender, Einstellungen).
+ */
 public class MainActivity extends AppCompatActivity {
 
-    private MaterialToolbar toolbar; // Obere Leiste (Titel + Menü)
+    // Toolbar, die oben in der App angezeigt wird
+    private MaterialToolbar toolbar;
 
-    // Labels um gezielt ein Fragment zu öffnen (z.B. per Intent von anderen Activities)
+    // Intent-Extra, um beim Start gezielt ein bestimmtes Fragment zu öffnen
+    // Muss exakt zu den 4 Unterseiten passen
     private static final String EXTRA_OPEN_FRAGMENT = "open_fragment";
+
+    // Mögliche Zielwerte für EXTRA_OPEN_FRAGMENT
     private static final String FRAG_HOME = "home";
     private static final String FRAG_ADD_PERSON = "add_person";
     private static final String FRAG_CALENDAR = "calendar";
     private static final String FRAG_SETTINGS = "settings";
 
+    /**
+     * Wird beim Start der Activity aufgerufen.
+     * Prüft zuerst, ob ein User eingeloggt ist. Falls nicht, wird zur LoginActivity umgeleitet.
+     * Danach wird die Toolbar eingerichtet und das Start-Fragment geladen.
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        // Wenn nicht eingeloggt -> direkt zur LoginActivity und zurück-Stack leeren
+        // Auth-Gate: Ohne eingeloggten Nutzer darf man nicht in die MainActivity
         if (FirebaseAuth.getInstance().getCurrentUser() == null) {
+            // LoginActivity starten und Backstack löschen (User kann nicht zurück)
             Intent i = new Intent(this, LoginActivity.class);
             i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(i);
@@ -42,45 +66,57 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        setContentView(R.layout.activity_main); // Main-Layout mit Fragment-Container
+        // Layout der MainActivity laden
+        setContentView(R.layout.activity_main);
 
-        toolbar = findViewById(R.id.toolbar); // Toolbar aus Layout holen
-        setSupportActionBar(toolbar); // Toolbar als ActionBar nutzen
+        // Toolbar aus dem Layout holen und als ActionBar setzen
+        toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
 
-        // Kein Zurück-Pfeil in der MainActivity
+        // Navigation-Icon deaktivieren (kein "Zurück"-Pfeil, weil Top-Level Navigation)
         toolbar.setNavigationIcon(null);
         toolbar.setNavigationOnClickListener(null);
 
+        // Auch über ActionBar sicherstellen, dass kein Back-Button angezeigt wird
         if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(false); // Up-Button aus
+            getSupportActionBar().setDisplayHomeAsUpEnabled(false);
         }
 
-        // Wenn sich das Fragment ändert -> Toolbar-Titel neu setzen
+        // Listener: Wenn sich der Fragment-Backstack ändert, Toolbar-Titel neu setzen
         getSupportFragmentManager()
                 .addOnBackStackChangedListener(this::applyToolbarFromCurrentFragment);
 
+        // Wenn Activity neu gestartet wurde
         if (savedInstanceState == null) {
-            // Beim ersten Start: Fragment ggf. per Intent auswählen
+            // Startfragment kann per Intent bestimmt werden (z.B. "calendar" öffnen)
             handleStartNavigation(getIntent());
         } else {
-            // Bei Rotation Titel passend zum aktuellen Fragment setzen
+            // Bei Restore den Toolbar-Titel passend zum aktuellen Fragment setzen
             applyToolbarFromCurrentFragment();
         }
     }
 
-    // Kommt, wenn MainActivity schon läuft und ein neues Intent reinkommt
+    //Wird aufgerufen, wenn die MainActivity bereits läuft und ein neues Intent bekommt
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        setIntent(intent); // Intent aktualisieren, damit getIntent() stimmt
-        handleStartNavigation(intent); // Direkt zum gewünschten Fragment springen
+
+        // Das neue Intent speichern, damit getIntent() aktuell bleibt
+        setIntent(intent);
+
+        // Das gewünschte Startfragment anhand des Intents öffnen
+        handleStartNavigation(intent);
     }
 
+    /**
+     * Liest aus dem Intent, welches Fragment geöffnet werden soll.
+     * Falls nichts angegeben ist, wird standardmäßig Home geladen.
+     */
     private void handleStartNavigation(Intent intent) {
-        // Liest, welches Fragment geöffnet werden soll
+        // Intent-Extra auslesen (kann null sein)
         String target = intent != null ? intent.getStringExtra(EXTRA_OPEN_FRAGMENT) : null;
 
-        // Je nach Ziel-String das passende Fragment öffnen
+        // Je nach Zielwert entsprechendes Fragment laden
         if (FRAG_ADD_PERSON.equals(target)) {
             replaceFragment(new AddPersonFragment());
         } else if (FRAG_CALENDAR.equals(target)) {
@@ -88,27 +124,30 @@ public class MainActivity extends AppCompatActivity {
         } else if (FRAG_SETTINGS.equals(target)) {
             replaceFragment(new SettingsFragment());
         } else {
-            replaceFragment(new HomeFragment()); // Standard: Home
+            // Standard: Home
+            replaceFragment(new HomeFragment());
         }
     }
 
+    //Erstellt das Options-Menü (Toolbar-Menü)
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        // Menü oben rechts laden
         getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
+    //Reagiert auf Klicks im Menü und wechselt zu den entsprechenden Fragmenten
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        // Reagiert auf Klicks im Toolbar-Menü
         int id = item.getItemId();
 
+        // Falls ein allgemeiner Menüpunkt existiert (Platzhalter), wird hier abgefangen
         if (id == R.id.action_menu) {
-            return true; // Falls das nur ein „Platzhalter“-Item ist
+            return true;
         }
 
-        // Navigation zwischen den 4 Hauptseiten (Fragments)
+        // Menü-Navigation: je nach Auswahl Fragment ersetzen
         if (id == R.id.menu_home) {
             replaceFragment(new HomeFragment());
             return true;
@@ -123,32 +162,37 @@ public class MainActivity extends AppCompatActivity {
             return true;
         }
 
-        return super.onOptionsItemSelected(item); // Standard-Fall
+        return super.onOptionsItemSelected(item);
     }
 
+    //Ersetzt das aktuell angezeigte Fragment im fragmentContainer
     private void replaceFragment(Fragment fragment) {
-        // Tauscht das aktuell sichtbare Fragment im Container aus
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, fragment)
-                .runOnCommit(this::applyToolbarFromCurrentFragment) // Titel nach dem Wechsel setzen
+                // Nach erfolgreichem Fragment-Wechsel Toolbar-Titel aktualisieren
+                .runOnCommit(this::applyToolbarFromCurrentFragment)
                 .commit();
     }
 
+    /**
+     * Setzt den Toolbar-Titel passend zum aktuell sichtbaren Fragment.
+     * Falls das Fragment ToolbarConfig implementiert, wird dessen Titel verwendet.
+     */
     private void applyToolbarFromCurrentFragment() {
-        // Holt das aktuell sichtbare Fragment aus dem Container
+        // Aktuelles Fragment aus dem Container holen
         Fragment f = getSupportFragmentManager()
                 .findFragmentById(R.id.fragmentContainer);
 
-        // Standard-Titel, falls Fragment keinen eigenen liefert
+        // Standardtitel, falls Fragment keinen eigenen Titel liefert
         String title = "GeschenkPlaner";
 
-        // Wenn Fragment ToolbarConfig implementiert -> Fragment bestimmt den Titel selbst
+        // Falls Fragment ToolbarConfig implementiert, Titel dynamisch holen
         if (f instanceof ToolbarConfig) {
             title = ((ToolbarConfig) f).getToolbarTitle();
         }
 
-        // Titel in die ActionBar/Toolbar schreiben
+        // Titel in der ActionBar setzen
         if (getSupportActionBar() != null) {
             getSupportActionBar().setTitle(title);
             getSupportActionBar().setDisplayHomeAsUpEnabled(false);
@@ -157,13 +201,13 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //Öffnet das AddPersonFragment
     public void navigateToAddPerson() {
-        // Öffnet AddPerson
         replaceFragment(new AddPersonFragment());
     }
 
+    //Öffnet das HomeFragment (z.B. nach dem Speichern einer Person)
     public void openHome() {
-        // Öffnet Home von überall innerhalb der MainActivity
         replaceFragment(new HomeFragment());
     }
 }
