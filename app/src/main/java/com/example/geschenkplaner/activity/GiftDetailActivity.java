@@ -280,9 +280,6 @@ public class GiftDetailActivity extends AppCompatActivity {
     /**
      * Kommt zurück, wenn EditGiftActivity fertig ist.
      * Wenn RESULT_OK: neu laden, damit Änderungen sofort angezeigt werden.
-     *
-     * Hinweis: startActivityForResult/onActivityResult ist inzwischen „legacy“,
-     * aber solange ihr es so nutzt, ist das Verhalten korrekt. ([developer.android.com](https://developer.android.com/training/basics/intents/result?utm_source=chatgpt.com))
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
