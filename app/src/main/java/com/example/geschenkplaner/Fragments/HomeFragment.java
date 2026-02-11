@@ -44,13 +44,15 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private FirebaseAuth auth; // Zugriff auf eingeloggten User
-    private ListenerRegistration personsListener; // Firestore Listener merken
+    private ListenerRegistration personsListener; // Firestore Listener merken (damit wir ihn später stoppen können)
 
     private TextView tvGreeting; // Begrüßungstext
     private EditText etSearch; // Suchfeld
     private RecyclerView rvPersons; // Personenliste
     private TextView tvEmpty; // Text wenn Liste leer ist
 
+    // allItems = vollständige Daten vom Server, filteredItems = was gerade angezeigt wird
+    // Vorteil: filtern ohne erneut Firestore abzufragen.
     private final List<PersonRow> allItems = new ArrayList<>(); // Alle Personen aus Firestore
     private final List<PersonRow> filteredItems = new ArrayList<>(); // Gefilterte Personen
     private PersonAdapter adapter; // Adapter für RecyclerView
@@ -94,8 +96,9 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         );
 
         rvPersons.setLayoutManager(new LinearLayoutManager(requireContext())); // Normale Listenansicht
-        rvPersons.setAdapter(adapter); // Adapter setzen
+        rvPersons.setAdapter(adapter); // Adapter setzt Daten -> RecyclerView zeigt sie an
 
+        // TextWatcher: wird bei jeder Änderung im Suchfeld aufgerufen (Live-Filter)
         etSearch.addTextChangedListener(new TextWatcher() {
             @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
             @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
@@ -111,14 +114,14 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     @Override
     public void onStart() {
         super.onStart();
-        // Listener starten wenn Fragment sichtbar wird
+        // Lifecycle: onStart = Fragment wird sichtbar -> Live-Listener starten (Realtime-Updates).
         startPersonsListener();
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        // Listener stoppen wenn Fragment nicht mehr sichtbar ist
+        // Lifecycle: onStop = nicht mehr sichtbar -> Listener stoppen (spart Ressourcen, vermeidet doppelte Listener).
         stopPersonsListener();
     }
 
@@ -141,7 +144,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void startPersonsListener() {
-        // Sicherheit: alten Listener beenden
+        // Sicherheit: alten Listener beenden (sonst doppelte Updates / Memory-Leak).
         stopPersonsListener();
 
         FirebaseUser user = auth.getCurrentUser();
@@ -155,10 +158,11 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
 
         String uid = user.getUid();
 
+        // addSnapshotListener = „Realtime“: wird sofort + bei jeder Änderung neu aufgerufen.
         personsListener = FirestorePaths.persons(uid)
                 .orderBy("createdAt", Query.Direction.DESCENDING) // Neueste zuerst
                 .addSnapshotListener((snap, err) -> {
-                    allItems.clear(); // Liste neu aufbauen
+                    allItems.clear(); // Liste neu aufbauen (wir ersetzen den kompletten Inhalt)
 
                     if (err != null || snap == null) {
                         tvEmpty.setText("Fehler beim Laden der Personen.");
@@ -182,18 +186,20 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
                     }
 
                     // Demo-Daten nur wenn noch keine Personen existieren
+                    // (und nur einmal pro App-Session, sonst würden ständig neue Demo-Personen entstehen)
                     if (!demoSeededThisSession && allItems.isEmpty()) {
                         demoSeededThisSession = true;
                         seedDemo(uid);
                     }
 
+                    // Filter erneut anwenden (z.B. wenn User gerade tippt)
                     applyFiltered(etSearch.getText() != null ? etSearch.getText().toString() : "");
                     updateEmptyState();
                 });
     }
 
     private void stopPersonsListener() {
-        // Firestore Listener sauber entfernen
+        // Firestore Listener sauber entfernen (sehr wichtig im Fragment-Lifecycle)
         if (personsListener != null) {
             personsListener.remove();
             personsListener = null;
@@ -214,11 +220,13 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
             filteredItems.addAll(allItems); // Keine Suche -> alles anzeigen
         } else {
             for (PersonRow p : allItems) {
+                // Filterregel: Treffer, wenn Name den Suchtext enthält
                 if (p.name.toLowerCase().contains(q)) filteredItems.add(p);
             }
         }
 
-        adapter.notifyDataSetChanged(); // RecyclerView neu zeichnen
+        // notifyDataSetChanged = „Liste neu zeichnen“, weil sich die Daten geändert haben.
+        adapter.notifyDataSetChanged();
     }
 
     private void updateEmptyState() {
@@ -229,7 +237,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void showRowMenu(View anchor, PersonRow row) {
-        // 3-Punkte-Menü anzeigen
+        // 3-Punkte-Menü anzeigen (PopupMenu hängt am More-Button der Zeile)
         PopupMenu menu = new PopupMenu(requireContext(), anchor);
         menu.getMenuInflater().inflate(R.menu.person_row_menu, menu.getMenu());
 
@@ -251,28 +259,33 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         // Dialog zum Bearbeiten einer Person
         View content = LayoutInflater.from(requireContext())
                 .inflate(R.layout.dialog_edit_person, null, false);
-
+        
+        TextView tvTitle = content.findViewById(R.id.tvEditTitle);
         EditText etName = content.findViewById(R.id.etEditName);
         EditText etBirthday = content.findViewById(R.id.etEditBirthday);
         EditText etNote = content.findViewById(R.id.etEditNote);
 
+        // Vorbelegen mit alten Werten
+        tvTitle.setText(row.title);
         etName.setText(row.name);
         etBirthday.setText(row.birthday);
         etNote.setText(row.note);
 
         new AlertDialog.Builder(requireContext())
-                .setTitle(row.name != null && !row.name.trim().isEmpty() ? row.name : "Person bearbeiten")
+                .setTitle(row.title != null && !row.name.trim().isEmpty() ? row.name : "Person bearbeiten")
                 .setView(content)
                 .setPositiveButton("Speichern", (d, w) -> {
                     FirebaseUser user = auth.getCurrentUser();
                     if (user == null) return;
 
+                    // Map = Felder, die wir in Firestore aktualisieren
                     Map<String, Object> update = new HashMap<>();
                     update.put("name", etName.getText().toString().trim());
                     update.put("birthday", etBirthday.getText().toString().trim());
                     update.put("note", etNote.getText().toString().trim());
                     update.put("updatedAt", Timestamp.now());
 
+                    // Update schreibt nur diese Felder ins bestehende Dokument
                     FirestorePaths.person(user.getUid(), row.id).update(update);
                 })
                 .setNegativeButton("Abbrechen", null)
@@ -294,7 +307,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private void seedDemo(String uid) {
-        // Demo-Personen anlegen
+        // Demo-Personen anlegen (nur wenn Liste leer und nur einmal pro Session)
         String[] demoNames = {"Patrick Schmidt", "Lena Müller", "Tom Braun"};
         String[] demoBirth = {"12.03.2003", "01.11.2002", "26.07.2003"};
 
@@ -310,11 +323,12 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private static class PersonRow {
-        // Datenobjekt für eine Person
+        // Datenobjekt für eine Person (das, was wir pro Zeile brauchen)
         final String id;
         final String name;
         final String birthday;
         final String note;
+        public String title;
 
         PersonRow(String id, String name, String birthday, String note) {
             this.id = id;
@@ -324,24 +338,24 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         }
 
         String initial() {
-            // Ersten Buchstaben für Initiale zurückgeben
+            // Ersten Buchstaben für Initiale zurückgeben (für Avatar-Kreis)
             if (name == null || name.trim().isEmpty()) return "?";
             return String.valueOf(Character.toUpperCase(name.trim().charAt(0)));
         }
     }
 
     private interface OnPersonClick {
-        // Callback für Klick auf Person
+        // Callback für Klick auf Person (Adapter kennt die Activity/Navigation nicht direkt)
         void onClick(PersonRow row);
     }
 
     private interface OnMoreClick {
-        // Callback für Klick auf 3-Punkte
+        // Callback für Klick auf 3-Punkte-Menü
         void onMoreClick(View anchorView, PersonRow row);
     }
 
     private static class PersonAdapter extends RecyclerView.Adapter<PersonVH> {
-        // Adapter verbindet Personenliste mit RecyclerView
+        // Adapter: verbindet Daten (List<PersonRow>) mit UI-Zeilen (ViewHolder)
         private final List<PersonRow> data;
         private final OnPersonClick onClick;
         private final OnMoreClick onMoreClick;
@@ -355,7 +369,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         @NonNull
         @Override
         public PersonVH onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            // Layout für eine Zeile laden
+            // Layout für eine Zeile laden (wird recycelt -> Performance)
             View v = LayoutInflater.from(parent.getContext())
                     .inflate(R.layout.item_person, parent, false);
             return new PersonVH(v);
@@ -363,7 +377,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
 
         @Override
         public void onBindViewHolder(@NonNull PersonVH holder, int position) {
-            // Daten an ViewHolder binden
+            // Daten an ViewHolder binden (wird für jede sichtbare Zeile aufgerufen)
             PersonRow row = data.get(position);
             holder.bind(row);
 
@@ -378,7 +392,7 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
     }
 
     private static class PersonVH extends RecyclerView.ViewHolder {
-        // Hält die Views einer einzelnen Listenzeile
+        // ViewHolder: hält Referenzen auf Views einer Zeile (damit findViewById nicht ständig läuft)
         private final TextView tvName;
         private final TextView tvInfo;
         private final TextView tvInitial;
@@ -395,9 +409,12 @@ public class HomeFragment extends Fragment implements ToolbarConfig {
         void bind(PersonRow row) {
             // Daten in die Views setzen
             tvName.setText(row.name);
+
+            // Infozeile: zeigt Geburtstag oder Platzhalter
             tvInfo.setText(row.birthday == null || row.birthday.isEmpty()
                     ? "Geburtstag: —"
                     : "Geburtstag: " + row.birthday);
+
             tvInitial.setText(row.initial());
         }
     }
