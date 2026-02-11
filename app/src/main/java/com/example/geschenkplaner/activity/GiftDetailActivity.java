@@ -191,7 +191,7 @@ public class GiftDetailActivity extends AppCompatActivity {
 
     /**
      * Schreibt die geladenen Daten in die UI (Textfelder) und zeigt das Bild.
-     * Locale.GERMANY sorgt für deutsches Zahlenformat (z.B. 12,34 wird korrekt formatiert).
+     * Locale.GERMANY sorgt für deutsches Zahlenformat
      */
     private void render() {
         if (etName != null) etName.setText(title);
